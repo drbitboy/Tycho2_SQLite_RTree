@@ -1,7 +1,7 @@
 Tycho2_SQLite_RTree
 ===================
 
-Accessing the Tycho2 start catalog using the R-Tree module of SQLite
+Accessing the Tycho2 star catalog using the R-Tree module of SQLite
 
 From comments in tyc2_loadindex.py:
 
