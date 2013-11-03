@@ -10,10 +10,10 @@ SQLite DB file (tyc2.sqlite3) using SQLite R-Tree module
 
 Creates four tables:
 
-  tyc2indexrtree  - Index R-Tree
-  tyc2index       - Index table
-  tyc2catalog_uvs - Main catalog subset, magnitude and unit vector at RA,DEC
-  tyc2suppl1_uvs  - Supplemental 1 catalog subset, mag and unit vector at RA,DEC
+- tyc2indexrtree  - Index R-Tree
+- tyc2index       - Index table
+- tyc2catalog_uvs - Main catalog subset, magnitude and unit vector at RA,DEC
+- tyc2suppl1_uvs  - Supplemental 1 catalog subset, mag and unit vector at RA,DEC
 
 
 Usage:
