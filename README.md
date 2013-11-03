@@ -33,17 +33,26 @@ Prerequisites:
   - e.g. in BASH
 
       wget http://cdsarc.u-strasbg.fr/viz-bin/nph-Cat/tar.gz?I%2F259 -O I_259.tar.gz -O - | tar zxf -
+
       gunzip index.dat.gz
+
       gunzip suppl_1.dat.gz
+
       for i in tyc2.dat.??.gz ; do gunzip < $i ; done > catalog.dat
 
     OR 
 
       wget -q ftp://cdsarc.u-strasbg.fr/cats/I/259/index.dat.gz -O - | gunzip > index.dat
+
       wget -q ftp://cdsarc.u-strasbg.fr/cats/I/259/suppl_1.dat.gz -O - | gunzip > suppl_1.dat
+
       wget -q -O - ftp://cdsarc.u-strasbg.fr/cats/I/259/ \
+
       | grep tyc2.dat....gz \
+
       | sed 's,^.*[^/]\(tyc2.dat....gz\).*$,\1,' \
+
       | while read i ; do wget -q -O - ftp://cdsarc.u-strasbg.fr/cats/I/259/$i ; done \
+
       | gunzip > catalog.dat
 
