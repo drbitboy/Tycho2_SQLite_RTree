@@ -1,12 +1,12 @@
 Tycho2_SQLite_RTree
 ===================
 
-Accessing the Tycho2 star catalog using the R-Tree module of SQLite
+Accessing the Tycho2 star catalog using the R-Tree module of SQLite for
 
 From comments in tyc2_loadindex.py:
 
-Put Tycho-2 main and supplement 1 catalogs and index into
-SQLite DB file (tyc2.sqlite3) using SQLite R-Tree module
+Put Tycho-2 main and supplement 1 catalogs and index into a SQLite DB
+file (tyc2.sqlite3) using SQLite R-Tree module for the index.
 
 Creates four tables:
 
@@ -15,6 +15,8 @@ Creates four tables:
 - tyc2catalog_uvs - Main catalog subset, magnitude and unit vector at RA,DEC
 - tyc2suppl1_uvs  - Supplemental 1 catalog subset, mag and unit vector at RA,DEC
 
+It may make sense to put the whole catalog into an R-Tree, but I'm just winging it and I am not sure if the R-Tree module would work for zero-sized ranges.
+The nice thing about doing catalog is that magnitude could be the third axis.
 
 Usage:
 
