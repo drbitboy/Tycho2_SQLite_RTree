@@ -44,17 +44,17 @@ Prerequisites:
 
     OR 
 
-      wget -q ftp://cdsarc.u-strasbg.fr/cats/I/259/index.dat.gz -O - | gunzip > index.dat
+      pfx="ftp://cdsarc.u-strasbg.fr/cats/I/259/"
 
-      wget -q ftp://cdsarc.u-strasbg.fr/cats/I/259/suppl_1.dat.gz -O - | gunzip > suppl_1.dat
+      wget -q $pfx/index.dat.gz -O - | gunzip > index.dat
 
-      wget -q -O - ftp://cdsarc.u-strasbg.fr/cats/I/259/ \
+      wget -q $pfx/suppl_1.dat.gz -O - | gunzip > suppl_1.dat
 
-      | grep tyc2.dat....gz \
+      wget -q -O - $pfx/ \
 
-      | sed 's,^.*[^/]\(tyc2.dat....gz\).*$,\1,' \
+      | grep 'tyc2.dat.[0-9][0-9].gz' \
 
-      | while read i ; do wget -q -O - ftp://cdsarc.u-strasbg.fr/cats/I/259/$i ; done \
+      | gawk '{printf "tyc2.dat.%02d.gz\n", i++}' \
 
-      | gunzip > catalog.dat
+      | while read gz ; do wget -q -O - $pfx/$gz | gunzip ; done > catalog.dat
 
