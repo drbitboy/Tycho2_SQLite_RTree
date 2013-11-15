@@ -171,8 +171,20 @@ if 'reload' in sys.argv[1:]:
   cn.close()
 
 
-### Option test:  list all possible stars from 50<RA<55, 20<DEC<25, mag<7.5 (Around Pleiades)
+### Option test:  list all *possible* stars from 56<RA<58, 23<DEC<25, mag<6.5 (Pleiades)
 if 'test' in sys.argv[1:]:
+
+  ### HiMag, LoRA, HiRA, LoDEC, HiDEC
+  dflt5=[6.5,56.0,58.0,23.0,25.0,]
+
+  for arg in sys.argv[1:]:
+    i=0
+    for name in 'himag lora hira lodec hidec'.split():
+      pfx = '--%s=' % (name,)
+      lenPfx = len(pfx)
+      if arg[:lenPfx]==pfx: dflt5[i] = float(arg[lenPfx:])
+      i += 1
+
   cn = sl3.connect("tyc2.sqlite3")
   cu = cn.cursor()
   cu.execute("""
@@ -184,13 +196,14 @@ INNER JOIN tyc2index
 INNER JOIN tyc2catalog_uvs
    ON tyc2index.tyc2start<=tyc2catalog_uvs.offset
   AND tyc2index.tyc2end>tyc2catalog_uvs.offset
-  AND tyc2catalog_uvs.mag<7.5
+  AND tyc2catalog_uvs.mag<?
 WHERE tyc2indexrtree.offset=tyc2index.offset
-  AND tyc2indexrtree.lora<55.0
-  AND tyc2indexrtree.hira>50.0
-  AND tyc2indexrtree.lodec<25.0
-  AND tyc2indexrtree.hidec>20.0
+  AND tyc2indexrtree.hira>?
+  AND tyc2indexrtree.lora<?
+  AND tyc2indexrtree.hidec>?
+  AND tyc2indexrtree.lodec<?
 ORDER BY tyc2catalog_uvs.mag asc;
-""")
+""", dflt5)
 
-  for row in cu: print row
+  print(" Offset      X      Y      Z   Magn.")
+  for row in cu: print( "%7d %6.3f %6.3f %6.3f %7.3f" % row )
