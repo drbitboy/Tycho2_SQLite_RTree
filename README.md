@@ -52,7 +52,7 @@ Prerequisites:
 
       | grep tyc2.dat....gz \
 
-      | sed 's,^.*[^/]\(tyc2.dat....gz\).*$,\1,' \
+      | sed 's,^.*[^/]\\(tyc2.dat....gz\\).*$,\\1,' \
 
       | while read i ; do wget -q -O - ftp://cdsarc.u-strasbg.fr/cats/I/259/$i ; done \
 
