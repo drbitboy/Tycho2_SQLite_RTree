@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     ### Open index.dat and read first line
     offset = 0
-    f = open('index.dat','rb')
+    f = open(dikt['index'],'rb')
     nexttoks = [i.strip() for i in f.readline().split('|')]
     rows = [int(i)-1 for i in nexttoks[:2]]
 
@@ -190,11 +190,11 @@ if __name__ == "__main__":
         self.openfile = openfile
 
         ### Get columns in line containing B- and V-Magnitude values
-        self.blo,self.bhi,self.vlo,self.vhi = [int(i) for i in ngtoks[-4:]]
+        self.blo,self.bhi,self.vlo,self.vhi = [int(i) for i in ngtoks[2:]]
 
         ### Get bvflag, first character of catalog name
-        self.bvflag =  int(ngtoks[-5]) if ngtoks[-5]!='X' else 0
-        self.isCatalog = ngtoks[-6][0] == 'c'
+        self.bvflag =  int(ngtoks[1]) if ngtoks[1]!='X' else 0
+        self.isCatalog = ngtoks[0][0] == 'c'
 
         self.offset = -1
 
@@ -243,17 +243,17 @@ if __name__ == "__main__":
         raise StopIteration
 
 
-    for nameplus in 'suppl_1,suppl1,X,83,89,90,95 catalog,81,110,116,123,129'.split():
+    for nameplus in 'suppl1,X,83,89,90,95 catalog,81,110,116,123,129'.split():
       ### nameplus string values, one for main catalog and one for supplemental 1 catalog:
-      ### - catalogName,tableName,BVFlagColumn,BMagColStart,BMagColEnd,VMagColStart,VMagColEnd
-      ### - catalog name is optional if it is the same as the catalog name
+      ### - tableID,BVFlagColumn,BMagColStart,BMagColEnd,VMagColStart,VMagColEnd
+      ### - tableID is key into dikt to get catalog filename
       ### - BVFlag only used in suppl_1.dat; set column to X for supplemental_1 catalog
 
       ngtoks = nameplus.split(',')
 
-      ### Build insert command (table name is ngtoks[-6])
+      ### Build insert command (table ID is ngtoks[0])
 
-      reciter = IterCat( open(ngtoks[0]+'.dat'), ngtoks[-6:])
+      reciter = IterCat(open(dikt[ngtoks[0]],'rb'),ngtoks)
 
       sql = reciter.getSelectStatement()
 
