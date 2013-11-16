@@ -2,75 +2,36 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
-#include <sqlite3.h>
+#include "tyc2lib.h"
 
-static char* stmts[] = 
-{ "SELECT tyc2catalog_uvs.offset"
-, "      ,tyc2catalog_uvs.x ,tyc2catalog_uvs.y ,tyc2catalog_uvs.z ,tyc2catalog_uvs.mag"
-, "FROM tyc2indexrtree"
-, "INNER JOIN tyc2index"
-, "   ON tyc2indexrtree.offset=tyc2index.offset"
-, "INNER JOIN tyc2catalog_uvs"
-, "   ON tyc2index.tyc2start<=tyc2catalog_uvs.offset"
-, "  AND tyc2index.tyc2end>tyc2catalog_uvs.offset"
-, "  AND tyc2catalog_uvs.mag<?"
-, "WHERE tyc2indexrtree.offset=tyc2index.offset"
-, "  AND tyc2indexrtree.hira>?"
-, "  AND tyc2indexrtree.lora<?"
-, "  AND tyc2indexrtree.hidec>?"
-, "  AND tyc2indexrtree.lodec<?"
-, "ORDER BY tyc2catalog_uvs.mag asc;"
-, 0 };
-/*    Limits (Pleiades):  MAG, RAlo, RAhi, DElo, DEHI */
-static double dflt5[] = { 6.5, 56.0, 58.0, 23.0, 25.0 };
+/*    Limits (Pleiades): */
+static double himag =  6.5;
+static double lora  = 56.0;
+static double hira  = 58.0;
+static double lodec = 23.0;
+static double hidec = 25.0;
 
 int main() {
-char *stmt, *pstmt, **ps;
-int L, rtn, i;
-sqlite3 *pDb = 0;
-sqlite3_stmt *pStmt = 0;
+int i = 0;
+pTYC2rtn pRtn = NULL;
+int count = tyc2RDMselect( "tyc2.sqlite3"
+                         , himag, lora, hira, lodec, hidec, "catalog"
+                         , &pRtn
+                         );
 
-  /* Build statement string */
-  for ( ps=stmts, L=0; *ps; ++ps) L += 1 + strlen(*ps);
-  stmt = (char *) malloc(1 + (L * sizeof(char)));
-  for ( ps=stmts, pstmt=stmt; *ps; ++ps) {
-    strcpy(pstmt, *ps);
-    pstmt += strlen(pstmt);
-    strcpy(pstmt, " ");
-    ++pstmt;
-  }
-  /* open DB; return on fail */
-  if (SQLITE_OK != sqlite3_open_v2( "tyc2.sqlite3", &pDb, SQLITE_OPEN_READONLY, (char *) 0)) return 1;
-
-  /* prepare statement; return on fail */
-  if (SQLITE_OK != sqlite3_prepare_v2( pDb, stmt, L+1, &pStmt, 0)) {
-    sqlite3_close(pDb);
-    free(stmt);
-    return 2;
-  }
-
-  /* bind parameters; return on faile */
-  for (i=0; i<5; ++i) {
-    if (SQLITE_OK != sqlite3_bind_double( pStmt, i+1, dflt5[i])) {
-      sqlite3_close(pDb);
-      free(stmt);
-      return i+3;
-    }
-  }
-
-  /* Print header, loop over rows, print out results */
+  /* Print header, loop over rows printing out results */
   printf(" Offset      X      Y      Z   Magn.\n");
-  while ( SQLITE_ROW == (rtn = sqlite3_step(pStmt)) ) {
-    for (i=0; i<5; ++i) {
-      if (i < 1) printf( "%7d", sqlite3_column_int(pStmt, i));
-      else       printf( i < 4 ? " %6.3f" : " %7.3f", sqlite3_column_double(pStmt, i));
+  if (count > 0 && pRtn) {
+  pTYC2rtn ptr;
+    for (ptr=pRtn+(i=0); ptr; ++i, ptr=ptr->next) {
+      printf( "%7d %6.3f %6.3f %6.3f %7.3f\n"
+            , ptr->offset
+            , ptr->xyz[0], ptr->xyz[1], ptr->xyz[2]
+            , ptr->mag
+            );
     }
-    printf("\n");
   }
   /* cleanup and return */
-  sqlite3_reset(pStmt);
-  sqlite3_finalize(pStmt);
-  sqlite3_close(pDb);
-  free(stmt);
-  return (rtn == SQLITE_DONE) ? 0 : 8;
+  if (pRtn) free(pRtn);
+  return count < 0 ? count : (i==count ? 0 : 1);
 }
