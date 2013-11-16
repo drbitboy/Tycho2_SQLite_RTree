@@ -19,8 +19,7 @@ Usage:
                            [--suppl1=suppl_1.dat] \\
                            [reload] \\
                            [loadallpaths] \\
-                           [test]
-
+                           [test[plot]]
 
 Prerequisites:
 
@@ -56,10 +55,14 @@ if __name__ == "__main__":
   import math
   import sqlite3 as sl3
 
+  ######################################################################
+  ### Parse arguments
+
   filekeys = 'index catalog suppl1 sqlite3db'.split()
 
   dikt = dict( reload=False
              , test=False
+             , testplot=False
              , loadallpaths=False
              , sqlite3db='tyc2.sqlite3'
              , index='index.dat'
@@ -81,6 +84,7 @@ if __name__ == "__main__":
         dikt[key] = arg[L:]
         break
 
+  ######################################################################
   ### Option loadallpaths:  Load all filepaths into SQLite DB
   if dikt['reload'] or dikt['loadallpaths']:
 
@@ -122,6 +126,7 @@ if __name__ == "__main__":
     cn.close()
 
 
+  ######################################################################
   ### Option reload:  Load data into SQLite DB
   if dikt['reload']:
 
@@ -215,16 +220,22 @@ if __name__ == "__main__":
 
           ### Skip catalog.dat lines with X in Column 13
           ### - suppl_1.dat has H or T in Column 13
-          if self.isCatalog and line[13]=='X': continue
+          if self.isCatalog and line[13]=='X':
+            radecCols = range(152,177,13)
+          else:
+            radecCols = range(15,40,13)
 
           ### Parse RA,DEC, BMag, VMag fields
-          ra,dec = [rpd*float(line[i:i+12]) for i in range(15,40,13)]
+          ra,dec = [rpd*float(line[i:i+12]) for i in radecCols]
           btok,vtok = [line[lo:hi].strip() for lo,hi in ((self.blo,self.bhi,),(self.vlo,self.vhi,),)]
 
           ### Parse magnitude pre bvflag and/or B/V mag values
           mag = 0.0
           if self.bvflag>0:
-            if line[self.bvflag]==' ' or line[self.bvflag]=='B': mag = float(btok)
+            try:
+              if line[self.bvflag]==' ' or line[self.bvflag]=='B': mag = float(btok)
+            except:
+              pass
             if mag==0.0 and vtok: mag = float(vtok)
           else:
             if btok:  mag = float(btok)
@@ -281,8 +292,9 @@ if __name__ == "__main__":
     cn.close()
 
 
+  ######################################################################
   ### Option test:  list all *possible* stars from 56<RA<58, 23<DEC<25, mag<6.5 (Pleiades)
-  if dikt['test']:
+  if dikt['test'] or dikt['testplot']:
 
     ### HiMag, LoRA, HiRA, LoDEC, HiDEC
     dflt5=[6.5,56.0,58.0,23.0,25.0,]
@@ -316,4 +328,18 @@ ORDER BY tyc2catalog_uvs.mag asc;
   """, dflt5)
 
     print(" Offset      X      Y      Z   Magn.")
-    for row in cu: print( "%7d %6.3f %6.3f %6.3f %7.3f" % row )
+    import math
+    dpr = 180.0 / math.pi
+    rows = [ row + ((' %7.3f %7.3f' % (dpr*math.atan2(row[2],row[1]), dpr*math.asin(row[3]),)) if dikt['testplot'] else '',) for row in cu.fetchall()]
+    for row in rows: print( "%7d %6.3f %6.3f %6.3f %7.3f%s" % row )
+
+    if dikt['testplot']:
+      import matplotlib.pyplot as plt
+      RAs = [ dpr*math.atan2(row[2],row[1]) for row in rows]
+      DECs = [ dpr*math.asin(row[3]) for row in rows]
+      plt.plot(RAs, DECs, 'o')
+      plt.xlabel("RA, deg")
+      plt.ylabel("DEC, deg")
+      plt.title("Tycho-2 Pleiades (Messier 45)")
+      plt.gca().invert_xaxis()
+      plt.show()
