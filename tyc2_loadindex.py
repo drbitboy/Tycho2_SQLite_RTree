@@ -141,7 +141,7 @@ if __name__ == "__main__":
     cu.execute("""DROP TABLE IF EXISTS tyc2indexrtree""")
     cu.execute("""DROP TABLE IF EXISTS tyc2index""")
     cu.execute("""CREATE VIRTUAL TABLE tyc2indexrtree using rtree(offset,lora,hira,lodec,hidec)""")
-    cu.execute("""CREATE TABLE IF NOT EXISTS tyc2index (offset int primary key,tyc2start int, suppl1start int, tyc2end int, suppl1end int)""")
+    cu.execute("""CREATE TABLE IF NOT EXISTS tyc2index (offset int primary key,catalogstart int, suppl1start int, catalogend int, suppl1end int)""")
 
     ### DROP and CREATE catalog TABLEs
     for tableid in 'catalog suppl1'.split():
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         ### Get columns in line containing B- and V-Magnitude values
         self.blo,self.bhi,self.vlo,self.vhi = [int(i) for i in ngtoks[2:]]
 
-        ### Get bvflag, first character of catalog name
+        ### Get bvflag, and whether this is catalog.dat or other (suppl_1.dat)
         self.bvflag =  int(ngtoks[1]) if ngtoks[1]!='X' else 0
         self.isCatalog = ngtoks[0][0] == 'c'
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
           ra,dec = [rpd*float(line[i:i+12]) for i in radecCols]
           btok,vtok = [line[lo:hi].strip() for lo,hi in ((self.blo,self.bhi,),(self.vlo,self.vhi,),)]
 
-          ### Parse magnitude pre bvflag and/or B/V mag values
+          ### Parse magnitude per bvflag and/or B/V mag values
           mag = 0.0
           if self.bvflag>0:
             try:
@@ -254,7 +254,7 @@ if __name__ == "__main__":
         raise StopIteration
 
 
-    for nameplus in 'suppl1,X,83,89,90,95 catalog,81,110,116,123,129'.split():
+    for nameplus in 'suppl1,X,83,89,96,102 catalog,81,110,116,123,129'.split():
       ### nameplus string values, one for main catalog and one for supplemental 1 catalog:
       ### - tableID,BVFlagColumn,BMagColStart,BMagColEnd,VMagColStart,VMagColEnd
       ### - tableID is key into dikt to get catalog filename
@@ -297,49 +297,56 @@ if __name__ == "__main__":
   if dikt['test'] or dikt['testplot']:
 
     ### HiMag, LoRA, HiRA, LoDEC, HiDEC
-    dflt5=[6.5,56.0,58.0,23.0,25.0,]
+    arg5=[6.5,56.0,58.0,23.0,25.0,]
 
     for arg in sys.argv[1:]:
       i=0
       for name in 'himag lora hira lodec hidec'.split():
         pfx = '--%s=' % (name,)
         lenPfx = len(pfx)
-        if arg[:lenPfx]==pfx: dflt5[i] = float(arg[lenPfx:])
+        if arg[:lenPfx]==pfx: arg5[i] = float(arg[lenPfx:])
         i += 1
 
+    import math
+    dpr = 180.0 / math.pi
+    print("C|S Offset      X      Y      Z   Magn.")
     cn = sl3.connect(dikt['sqlite3db'])
     cu = cn.cursor()
-    cu.execute("""
-SELECT tyc2catalog_uvs.offset
-      ,tyc2catalog_uvs.x ,tyc2catalog_uvs.y ,tyc2catalog_uvs.z ,tyc2catalog_uvs.mag
+
+    for catORsp1 in "catalog suppl1".split():
+      cu.execute("""
+SELECT tyc2%(cos)s_uvs.offset
+      ,tyc2%(cos)s_uvs.x ,tyc2%(cos)s_uvs.y ,tyc2%(cos)s_uvs.z ,tyc2%(cos)s_uvs.mag
 FROM tyc2indexrtree
 INNER JOIN tyc2index
    ON tyc2indexrtree.offset=tyc2index.offset
-INNER JOIN tyc2catalog_uvs
-   ON tyc2index.tyc2start<=tyc2catalog_uvs.offset
-  AND tyc2index.tyc2end>tyc2catalog_uvs.offset
-  AND tyc2catalog_uvs.mag<?
+INNER JOIN tyc2%(cos)s_uvs
+   ON tyc2index.%(cos)sstart<=tyc2%(cos)s_uvs.offset
+  AND tyc2index.%(cos)send>tyc2%(cos)s_uvs.offset
+  AND tyc2%(cos)s_uvs.mag<?
 WHERE tyc2indexrtree.offset=tyc2index.offset
   AND tyc2indexrtree.hira>?
   AND tyc2indexrtree.lora<?
   AND tyc2indexrtree.hidec>?
   AND tyc2indexrtree.lodec<?
-ORDER BY tyc2catalog_uvs.mag asc;
-  """, dflt5)
+ORDER BY tyc2%(cos)s_uvs.mag asc;
+  """ % dict(cos=catORsp1), arg5)
 
-    print(" Offset      X      Y      Z   Magn.")
-    import math
-    dpr = 180.0 / math.pi
-    rows = [ row + ((' %7.3f %7.3f' % (dpr*math.atan2(row[2],row[1]), dpr*math.asin(row[3]),)) if dikt['testplot'] else '',) for row in cu.fetchall()]
-    for row in rows: print( "%7d %6.3f %6.3f %6.3f %7.3f%s" % row )
+      rows = [ (catORsp1[0],) + row + ((' %7.3f %7.3f' % (dpr*math.atan2(row[2],row[1]), dpr*math.asin(row[3]),)) if dikt['testplot'] else '',) for row in cu.fetchall()]
+      for row in rows: print( "  %s%7d %6.3f %6.3f %6.3f %7.3f%s" % row )
+
+      if len(rows) and dikt['testplot']:
+        import matplotlib.pyplot as plt
+        RAs = [ dpr*math.atan2(row[3],row[2]) for row in rows]
+        DECs = [ dpr*math.asin(row[4]) for row in rows]
+        plt.plot(RAs, DECs, 'o', label=catORsp1)
+
+      arg5[0]=9.0
 
     if dikt['testplot']:
-      import matplotlib.pyplot as plt
-      RAs = [ dpr*math.atan2(row[2],row[1]) for row in rows]
-      DECs = [ dpr*math.asin(row[3]) for row in rows]
-      plt.plot(RAs, DECs, 'o')
       plt.xlabel("RA, deg")
       plt.ylabel("DEC, deg")
       plt.title("Tycho-2 Pleiades (Messier 45)")
       plt.gca().invert_xaxis()
+      plt.legend()
       plt.show()

@@ -76,6 +76,7 @@ pTYC2rtn ptr;
   }
   if (!count) {
     rtn = SQLITE_DONE;
+    i = count;
   } else {
     /* prepare statement; return on fail */
     --failRtn;

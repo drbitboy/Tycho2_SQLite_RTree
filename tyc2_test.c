@@ -11,20 +11,21 @@ static double hira  = 58.0;
 static double lodec = 23.0;
 static double hidec = 25.0;
 
-int main() {
+int sub(char *catORsp1) {
 int i = 0;
 pTYC2rtn pRtn = NULL;
-int count = tyc2RDMselect( "tyc2.sqlite3"
-                         , himag, lora, hira, lodec, hidec, "catalog"
+int count;
+
+  count = tyc2RDMselect( "tyc2.sqlite3"
+                         , himag, lora, hira, lodec, hidec, catORsp1
                          , &pRtn
                          );
 
-  /* Print header, loop over rows printing out results */
-  printf(" Offset      X      Y      Z   Magn.\n");
   if (count > 0 && pRtn) {
   pTYC2rtn ptr;
     for (ptr=pRtn+(i=0); ptr; ++i, ptr=ptr->next) {
-      printf( "%7d %6.3f %6.3f %6.3f %7.3f\n"
+      printf( "  %c%7d %6.3f %6.3f %6.3f %7.3f\n"
+            , *catORsp1
             , ptr->offset
             , ptr->xyz[0], ptr->xyz[1], ptr->xyz[2]
             , ptr->mag
@@ -34,4 +35,16 @@ int count = tyc2RDMselect( "tyc2.sqlite3"
   /* cleanup and return */
   if (pRtn) free(pRtn);
   return count < 0 ? count : (i==count ? 0 : 1);
+}
+
+int main() {
+int rtn;
+  /* Print header, loop over rows printing out results */
+  printf("C|S Offset      X      Y      Z   Magn.\n");
+
+  if ( !(rtn = sub("catalog")) ) {
+    himag = 9.0;
+    rtn = sub("suppl1");
+  }
+  return rtn;
 }

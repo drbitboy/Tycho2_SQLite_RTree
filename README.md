@@ -20,7 +20,11 @@ The nice thing about doing catalog is that magnitude could be the third axis.
 
 Usage:
 
-  python tyc2_loadindex.py [reload] [test]
+  python tyc2_loadindex.py [reload] [test[plot]]
+
+    ALSO
+
+  make clean test
 
 
 Prerequisites:
