@@ -20,5 +20,5 @@ tyc2.sqlite3:
 	python tyc2_loadindex.py reload
 
 clean:
-	$(RM) ctest.out pytest.out tyc2_test tyc2_test.o tyc2lib.o
+	$(RM) ctest.out pytest.out tyc2_test tyc2_test.o tyc2lib.o sqlite3.o
 

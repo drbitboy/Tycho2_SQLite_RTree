@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 #include <malloc.h>
 #include "tyc2lib.h" // includes sqlite3.h
@@ -123,12 +124,15 @@ pTYC2rtn ptr;                      // pointer to strucs in linked list
       if ( SQLITE_ROW != (rtn = sqlite3_step(pStmt)) ) break;
       ptr->seqNum = i;
       ptr->offset = sqlite3_column_int(pStmt, 0);
-      ptr->xyz[0] = sqlite3_column_double(pStmt, 1);
-      ptr->xyz[1] = sqlite3_column_double(pStmt, 2);
-      ptr->xyz[2] = sqlite3_column_double(pStmt, 3);
+      ptr->_xyz[0] = sqlite3_column_double(pStmt, 1);
+      ptr->_xyz[1] = sqlite3_column_double(pStmt, 2);
+      ptr->_xyz[2] = sqlite3_column_double(pStmt, 3);
       ptr->mag = sqlite3_column_double(pStmt, 4);
       ptr->ra =
       ptr->dec = 0.0;
+      strncpy( ptr->catalogORsuppl1, isCatalog ? STATIC_CATALOG : STATIC_SUPPL1, (sizeof ptr->catalogORsuppl1) - 1);
+      ptr->catalogORsuppl1[(sizeof ptr->catalogORsuppl1) - 1] =
+      *ptr->catline = '\0';
       ptr->next = ptr + 1;   // ->next pointer even though this is an array
     }
     /* Set NULL ->next pointer in last structure in linked list
@@ -154,4 +158,131 @@ pTYC2rtn ptr;                      // pointer to strucs in linked list
   free((void*) *pRtn);
   *pRtn = NULL;
   return --failRtn;
+}
+
+int
+tyc2_getCatline( char* tyc2SQLfilename
+          , pTYC2rtn tyc2
+          ) {
+sqlite3_stmt *pStmt = NULL;        // Pointer to repared statement
+sqlite3 *pDb = NULL;               // Pointer to connection to SQLite2 DB
+char *pPath;
+const char *rtnPtr;
+char path[1024];;
+int isCatalog;
+int rtn;
+int failRtn = -1;
+long lineLength;
+long cInt;
+FILE *f;
+
+  /* Return on null filename or pointer tyc2*/
+  if ( !tyc2SQLfilename || !tyc2) return failRtn;
+
+  *tyc2->catline = '\0';
+
+  /* set path and isCatalog */
+  isCatalog = (tolower(*tyc2->catalogORsuppl1) == 'c');
+  pPath = isCatalog ? STATIC_CATALOG : STATIC_SUPPL1;
+
+  /* open DB; return on fail */
+  --failRtn;
+  if (SQLITE_OK != sqlite3_open_v2( tyc2SQLfilename, &pDb, SQLITE_OPEN_READONLY, (char *) 0)) {
+    if (pDb) sqlite3_close(pDb);
+    return failRtn;
+  }
+  /* prepare statement to return count of stars matching parameters; return on fail */
+  --failRtn;
+  if (SQLITE_OK != sqlite3_prepare_v2( pDb, pathLookupStmt, strlen(pathLookupStmt)+1, &pStmt, 0)) {
+    sqlite3_finalize(pStmt);
+    sqlite3_close(pDb);
+    return failRtn;
+  }
+
+  /* bind parameters; return on fail */
+  --failRtn;
+  if (SQLITE_OK != sqlite3_bind_text( pStmt, 1, pPath, (int) strlen(pPath), SQLITE_STATIC)) {
+    sqlite3_finalize(pStmt);
+    sqlite3_close(pDb);
+    return failRtn;
+  }
+  /* read the one record; return on fail */
+  --failRtn;
+  if ( SQLITE_ROW != (rtn = sqlite3_step(pStmt)) ) {
+    sqlite3_finalize(pStmt);
+    sqlite3_close(pDb);
+    return failRtn;
+  }
+  /* extract path from record and copy it to the path variable */
+  --failRtn;
+  if ( !(rtnPtr = sqlite3_column_text(pStmt, 0)) ) {
+    sqlite3_finalize(pStmt);
+    sqlite3_close(pDb);
+    return failRtn;
+  }
+
+  strncpy( path, rtnPtr, 249);
+  path[249] = '\0';
+
+  /* read one more record; should return SQLITE_DONE */
+  --failRtn;
+  if ( SQLITE_DONE != (rtn = sqlite3_step(pStmt)) ) {
+    sqlite3_finalize(pStmt);
+    sqlite3_close(pDb);
+    return failRtn;
+  }
+
+  /* cleanup DB */
+  sqlite3_finalize(pStmt);
+  sqlite3_close(pDb);
+
+  /* Open file */
+  --failRtn;
+  if ( !(f = fopen( path, "r")) ) {
+    return failRtn;
+  }
+
+  /* set length w/o line termination; will be offset to that termination */
+  lineLength = isCatalog ? 206 : 122;
+
+  fseek(f,lineLength,SEEK_SET);
+  cInt = fgetc(f);
+  --failRtn;
+  if (cInt == 13) {   /* cInt may be a carriage return */
+    ++lineLength;
+    cInt = fgetc(f);
+  }
+  --failRtn;
+  if (cInt != 10) {   /* to here, cInt must be a linefeed */
+    fclose(f);
+    return failRtn;
+  }
+
+  ++lineLength;        /* line length including line termination char(s) */
+
+  --failRtn;
+  if ( fseek(f, lineLength * (long) tyc2->offset, SEEK_SET) ) {
+    fclose(f);
+    return failRtn;
+  }
+
+  --failRtn;
+  if ( tyc2->catline != fgets(tyc2->catline, sizeof tyc2->catline, f) ) {
+    fclose(f);
+    return failRtn;
+  }
+
+  fclose(f);
+
+  tyc2->catline[(sizeof tyc2->catline) - 1] = '\0';
+
+  lineLength = strlen(tyc2->catline) - 1;
+
+  if (lineLength >= 0 && tyc2->catline[lineLength] == 10) {
+    tyc2->catline[lineLength--] = '\0';
+  }
+  if (lineLength >= 0 && tyc2->catline[lineLength] == 13) {
+    tyc2->catline[lineLength] = '\0';
+  }
+  return 0;
 }

@@ -46,14 +46,15 @@ int count;
     for (ptr=pRtn+(i=0); ptr; ++i, ptr=ptr->next) {
 
       /* print out data, in structure pointed to by ptr, for one star */
-      printf( "  %c%7d %6.3f %6.3f %6.3f %7.3f\n"
+      printf( "  %c%7ld %6.3f %6.3f %6.3f %7.3f\n"
             , *catORsp1     // 'c' or 's'; i.e. first char of "catalog" or "suppl1"
             , ptr->offset   // Offset of record in catalog.dat or in suppl_1.dat
-            , ptr->xyz[0]   // X-component of unit vector pointing at RA,DEC of start
-            , ptr->xyz[1]   // Y-component  "
-            , ptr->xyz[2]   // Z-component  "
+            , ptr->_xyz[0]   // X-component of unit vector pointing at RA,DEC of start
+            , ptr->_xyz[1]   // Y-component  "
+            , ptr->_xyz[2]   // Z-component  "
             , ptr->mag      // Magnitude:  B or V or Hp (suppl1)
             );
+      fprintf( stderr, "%d:%ld:<%s>\n", tyc2_getCatline("tyc2.sqlite3",ptr),ptr->offset,ptr->catline);
     }
   }
   if (pRtn) free(pRtn);                           // cleanup
