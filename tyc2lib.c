@@ -286,3 +286,54 @@ FILE *f;
   }
   return 0;
 }
+
+#ifndef SKIP_SIMBAD
+/* Simple URL call to SIMBAD to get basic info written to STDERR
+ * 
+ * This research has made use of the SIMBAD database,
+ *     operated at CDS, Strasbourg, France
+ */
+static char urlBase[1024] = { "http://simweb.u-strasbg.fr/simbad/sim-script?submit=submit+script&script=format+object+%22MAIN_ID:%20%20%25MAIN_ID%5Cn%20%20RA,DEC:%20%20%25COO%28d2%3BAD%29%5Cn%20%20OBJTYP:%20%20%25OTYPE%28V%29%5Cn%20%20FLXLIST:%20%20%25FLUXLIST%28V%29%5Cn%5Cn%22%0Atyc+" };
+static char urlFmt[] = { "%04d-%05d-%01d" };
+static char* urlPtr = (char*) NULL;
+
+int tyc2_simbad(FILE* stdFile, char *tyc2Record, int* tycNarg) {
+CURLcode* ch;
+int rtn = 1;
+  if ( !urlPtr ) urlPtr = urlBase + strlen(urlBase);
+  
+  while (1) {
+  int tycN[3];
+
+    ch = 0;
+
+    if (tyc2Record) {
+    char r13[13];
+      strncpy( r13, tyc2Record, 12);
+      r13[12] = '\0';
+      if ( 3 != sscanf(r13, "%d %d %d", tycN+0, tycN+1, tycN+2)) break;
+    } else if (tycNarg) {
+      memcpy(tycN, tycNarg, sizeof tycN);
+    } else {
+      break;
+    }
+    sprintf( urlPtr, urlFmt, tycN[0], tycN[1], tycN[2] );
+
+#   define IFBK(A) if (A) break
+    IFBK( !(ch = curl_easy_init()) );
+    IFBK( CURLE_OK != curl_easy_setopt(ch, CURLOPT_VERBOSE, 0) );
+    IFBK( CURLE_OK != curl_easy_setopt(ch, CURLOPT_HEADER, 0) );
+    IFBK( CURLE_OK != curl_easy_setopt(ch, CURLOPT_WRITEFUNCTION, NULL) );
+    IFBK( CURLE_OK != curl_easy_setopt(ch, CURLOPT_WRITEDATA, stdFile) );
+    IFBK( CURLE_OK != curl_easy_setopt(ch, CURLOPT_URL, urlBase) );
+    IFBK( CURLE_OK != curl_easy_perform(ch) );
+
+    rtn = 0; // success
+    break;
+  } // while 1
+
+  if (ch) curl_easy_cleanup(ch);
+
+  return rtn;
+}
+#endif //ifndef SKIP_SIMBAD

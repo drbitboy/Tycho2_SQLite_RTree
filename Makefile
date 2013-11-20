@@ -1,5 +1,7 @@
 
-LDLIBS=-lsqlite3
+CFLAGS=$(shell curl-config --cflags 2>/dev/null || echo -DSKIP_SIMBAD)
+
+LDLIBS=-lsqlite3 $(shell curl-config --libs 2>/dev/null)
 
 test: pytest.out ctest.out
 	md5sum $^

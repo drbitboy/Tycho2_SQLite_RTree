@@ -36,4 +36,16 @@ int tyc2RDMselect( char* tyc2SQLfilename, double himag
 
 int tyc2_getCatline( char* tyc2SQLfilename, pTYC2rtn tyc2);
 
-#endif // __TYC2LIB_H__
+#ifndef SKIP_SIMBAD
+#include <stdio.h>
+#include <string.h>
+#include <curl/curl.h>
+
+/* Simple URL call to SIMBAD to get basic info written to STDERR
+ * 
+ * This research has made use of the SIMBAD database,
+ *     operated at CDS, Strasbourg, France
+ */
+int tyc2_simbad(FILE* stdFile, char *tyc2Record, int* tycNarg);
+#endif // ifndef SKIP_SIMBAD
+#endif // ifndef __TYC2LIB_H__
