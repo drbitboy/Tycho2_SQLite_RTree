@@ -36,7 +36,14 @@ Prerequisites:
 - Assumes catalog.dat, suppl_1.dat and index.dat are in the current
   directory
 
-  - e.g. in BASH
+  - Using provided python script:
+
+      python httpgunzip.py index.dat suppl_1.dat 0 tyc2.dat
+
+    and ignore the error (URLError: <urlopen error ftp error:) at the end
+
+
+  - Alternatives via BASH
 
       wget http://cdsarc.u-strasbg.fr/viz-bin/nph-Cat/tar.gz?I%2F259 -O I_259.tar.gz -O - | tar zxf -
 
