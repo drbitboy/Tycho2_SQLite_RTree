@@ -38,7 +38,7 @@ Prerequisites:
 
   - Using provided python script:
 
-      python httpgunzip.py index.dat suppl_1.dat 0 tyc2.dat
+      python httpgunzip.py index.dat suppl_1.dat tyc2.dat ReadMe
 
     and ignore the error (URLError: <urlopen error ftp error:) at the end
 
