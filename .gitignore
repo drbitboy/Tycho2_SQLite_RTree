@@ -5,5 +5,6 @@ pytest.out
 suppl_1.dat
 tyc2.sqlite3
 tyc2_test
+tyc2_test.exe
 tyc2_test.o
 tyc2lib.o
