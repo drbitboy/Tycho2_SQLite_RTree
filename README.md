@@ -40,8 +40,6 @@ Prerequisites:
 
       python httpgunzip.py index.dat suppl_1.dat tyc2.dat ReadMe
 
-    and ignore the error (URLError: <urlopen error ftp error:) at the end
-
 
   - Alternatives via BASH
 
