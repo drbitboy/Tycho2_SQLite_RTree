@@ -54,7 +54,7 @@ int count;
             , ptr->_xyz[2]   // Z-component  "
             , ptr->mag      // Magnitude:  B or V or Hp (suppl1)
             );
-      fprintf( stderr, "%d:%ld:<%s>\n", tyc2_getCatline("tyc2.sqlite3",ptr),ptr->offset,ptr->catline);
+      //fprintf( stderr, "%d:%ld:<%s>\n", tyc2_getCatline("tyc2.sqlite3",ptr),ptr->offset,ptr->catline);
     }
   }
   if (pRtn) free(pRtn);                           // cleanup

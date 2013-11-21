@@ -7,6 +7,7 @@ test: pytest.out ctest.out
 	md5sum $^
 	diff -y -W80 $^
 	diff -s $^
+	sum $^
 
 tyc2_test:: tyc2_test.o tyc2lib.o
 
