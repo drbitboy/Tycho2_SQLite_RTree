@@ -38,7 +38,7 @@ Prerequisites:
 
   - Using provided python script:
 
-      python httpgunzip.py index.dat suppl_1.dat tyc2.dat ReadMe
+      python httpgunzip.py --doit index.dat suppl_1.dat tyc2.dat ReadMe
 
 
   - Alternatives via BASH
