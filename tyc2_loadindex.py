@@ -53,7 +53,11 @@ if __name__ == "__main__":
   import os
   import sys
   import math
-  import sqlite3 as sl3
+  try:
+    import sqlite3 as sl3
+  except:
+    import sqlite3ghost as sl3
+    sys.stderr.write( "Falling back to sqlite2ghost...\n" )
 
   ######################################################################
   ### Parse arguments
@@ -105,9 +109,9 @@ if __name__ == "__main__":
               assert os.access(os.path.dirname(realpath),os.W_OK)
               continue
             except:
-              print( '\nERROR:  %s file (%s) not writeable; exiting\n' % (key, realpath,) )
+              sys.stderr.write( '\nERROR:  %s file (%s) not writeable; exiting\n\n' % (key, realpath,) )
               raise
-        print( '\nERROR:  %s file (%s) either not found or not a regular file; exiting\n' % (key, realpath,) )
+        sys.stderr.write( '\nERROR:  %s file (%s) either not found or not a regular file; exiting\n\n' % (key, realpath,) )
         raise
 
       pathsDict[key] = os.path.realpath(dikt[key])
@@ -119,7 +123,7 @@ if __name__ == "__main__":
     cu.execute("""CREATE TABLE IF NOT EXISTS tyc2paths (key varchar(32) primary key, fullpath varchar(1024))""")
 
     for key in pathsDict:
-      print( "Loading %s file %s" % (key, pathsDict[key],) )
+      sys.stderr.write( "Loading %s file %s\n" % (key, pathsDict[key],) )
       cu.execute("""REPLACE INTO tyc2paths VALUES (?,?)""", (key,pathsDict[key],))
 
     cn.commit()
@@ -166,7 +170,9 @@ if __name__ == "__main__":
     ### - R-Tree table, tyc2indexrtree, contains line offset (key), RA, DEC ranges
     ### - Index table, tyc2index, contains line offset (key), plus start and
     ###   end+1 offsets into main and supplemental_1 catalogs
-    for line in f:
+    while True:
+      line = f.readline()
+      if not line: break
       toks = nexttoks[:]
       hilos = [offset] + [float(i) for i in toks[-4:]]
       nexttoks = [i.strip() for i in line.split('|')]
@@ -175,7 +181,7 @@ if __name__ == "__main__":
       cu.execute( """INSERT INTO tyc2index VALUES (?,?,?,?,?)""", rows)
       offset += 1
 
-    sys.stdout.write('%d records written for tyc2index and rtree\n'%(offset,)),
+    sys.stderr.write('%d records written for tyc2index and rtree\n'%(offset,)),
     f.close()
 
     cn.commit()
@@ -198,7 +204,10 @@ if __name__ == "__main__":
         self.blo,self.bhi,self.vlo,self.vhi = [int(i) for i in ngtoks[2:]]
 
         ### Get bvflag, and whether this is catalog.dat or other (suppl_1.dat)
-        self.bvflag =  int(ngtoks[1]) if ngtoks[1]!='X' else 0
+        if ngtoks[1]!='X':
+          self.bvflag = int(ngtoks[1])
+        else:
+          self.bvflag = 0
         self.isCatalog = ngtoks[0][0] == 'c'
 
         self.offset = -1
@@ -213,10 +222,14 @@ if __name__ == "__main__":
 
         ### Read one line from catalog file; offset is relative to first line
 
-        for line in self.openfile:
+        while True:
+
+          line = self.openfile.readline()
+
+          if not line: break
 
           self.offset += 1
-          if (self.offset % 100000) == 99999: sys.stdout.write('.') ; sys.stdout.flush()
+          if (self.offset % 100000) == 99999: sys.stderr.write('.') ; sys.stderr.flush()
 
           ### Skip catalog.dat lines with X in Column 13
           ### - suppl_1.dat has H or T in Column 13
@@ -268,7 +281,7 @@ if __name__ == "__main__":
 
       sql = reciter.getSelectStatement()
 
-      print( sql )
+      sys.stderr.write( "%s\n" % (sql,) )
 
       cu.execute("""BEGIN TRANSACTION""")
       cu.executemany(sql,reciter)
@@ -278,14 +291,18 @@ if __name__ == "__main__":
 
       reciter = None
 
-      sys.stdout.write('%s%d records written for %s\n'%('' if offset<100000 else '\n',offset,nameplus,)),
-      sys.stdout.flush()
+      if offset<100000:
+        nlopt = ''
+      else:
+        nlopt = '\n'
+      sys.stderr.write('%s%d records written for %s\n'%(nlopt,offset,nameplus,)),
+      sys.stderr.flush()
 
     ### Create INDEX for each magnitude
     for tableid in 'catalog suppl1'.split():
       table = """tyc2%s_uvs""" % (tableid,)
       s ="""CREATE INDEX IF NOT EXISTS %(tableid)s_mag ON %(table)s (mag)""" % dict(tableid=tableid,table=table)
-      print(s)
+      sys.stderr.write( "%s\n" % (s,) )
       cu.execute(s)
 
     ### Close DB connection
@@ -332,7 +349,10 @@ WHERE tyc2indexrtree.offset=tyc2index.offset
 ORDER BY tyc2%(cos)s_uvs.mag asc;
   """ % dict(cos=catORsp1), arg5)
 
-      rows = [ (catORsp1[0],) + row + ((' %7.3f %7.3f' % (dpr*math.atan2(row[2],row[1]), dpr*math.asin(row[3]),)) if dikt['testplot'] else '',) for row in cu.fetchall()]
+      def recra(row,isTestplot):
+        if isTestplot: return (' %7.3f %7.3f' % (dpr*math.atan2(row[2],row[1]), dpr*math.asin(row[3]),),)
+        return ('',)
+      rows = [ (catORsp1[0],) + row + recra(row,dikt['testplot']) for row in cu.fetchall()]
       for row in rows: print( "  %s%7d %6.3f %6.3f %6.3f %7.3f%s" % row )
 
       if len(rows) and dikt['testplot']:

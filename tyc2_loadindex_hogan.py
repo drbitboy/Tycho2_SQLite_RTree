@@ -170,7 +170,6 @@ if __name__ == "__main__":
     ### - R-Tree table, tyc2indexrtree, contains line offset (key), RA, DEC ranges
     ### - Index table, tyc2index, contains line offset (key), plus start and
     ###   end+1 offsets into main and supplemental_1 catalogs
-    ###for line in f:
     while True:
       line = f.readline()
       if not line: break
@@ -223,7 +222,6 @@ if __name__ == "__main__":
 
         ### Read one line from catalog file; offset is relative to first line
 
-        ###for line in self.openfile:
         while True:
 
           line = self.openfile.readline()
