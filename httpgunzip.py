@@ -55,7 +55,7 @@ class httpgunzip:
     urlPfx:  URL to directory containing file
              - defaults to Univ. Strasburg Tycho2 files
 
-  N.B. File outputFilename will be overwritten
+  N.B. File pathOut will be overwritten
 
   """
   def __init__(self, fnUrlFn, pathOut, urlPfx=urlPfxDefault):
