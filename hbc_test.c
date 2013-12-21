@@ -12,6 +12,7 @@ static double hira  = 58.0;
 static double lodec = 23.0;
 static double hidec = 25.0;
 
+static char sqlite3db[] = { "bsc5.sqlite3" };
 
 /***********************************************************************
  * searcher():  a local subroutine to query SQLite3 DB of Tycho-2 using
@@ -31,11 +32,11 @@ int count;
   /* Call hbcRDMselect:  BSC5 (Yale Bright Star Catalog) Ra/Dec/Magnitude sql SELECT
    * - available via hbclib.c
    */
-  count = hbcRDMselect( "bsc5.sqlite3"
-                         , hbcpfx
-                         , lomag, himag, lora, hira, lodec, hidec
-                         , &pRtn
-                         );
+  count = hbcRDMselect( sqlite3db
+                        , hbcpfx
+                        , lomag, himag, lora, hira, lodec, hidec
+                        , &pRtn
+                        );
 
   if (count > 0 && pRtn) {
   pSTARrtn ptr;
@@ -56,6 +57,11 @@ int count;
             , ptr->_xyz[2]   // Z-component  "
             , ptr->mag      // Magnitude:  B or V or Hp (suppl1)
             );
+    }
+    if ( getenv("HBC_TEST_DO_SIMBAD") ) {
+      for (ptr=pRtn+(i=0); ptr; ++i, ptr=ptr->next) {
+        hbc_simbad( stdout, hbcpfx, ptr->offset );
+      }
     }
   }
   if (pRtn) free(pRtn);                           // cleanup
