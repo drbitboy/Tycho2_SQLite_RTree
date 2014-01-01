@@ -1,7 +1,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include "localmalloc.h"
+#include "config.h"
 #include "hbclib.h" // includes sqlite3.h, tyc2lib.h
 
 /* Query <hbcpfx>rtree and <hbcpfx>data TABLEs
@@ -49,7 +50,11 @@ pTYC2rtn ptr;                      // pointer to structs in linked list
 
   /* open DB; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_open_v2( hbcSQLfilename, &pDb, SQLITE_OPEN_READONLY, (char *) 0)) {
+# else
+  if (SQLITE_OK != sqlite3_open( hbcSQLfilename, &pDb)) {
+# endif
     if (pDb) sqlite3_close(pDb);
     return failRtn;
   }
@@ -64,7 +69,11 @@ pTYC2rtn ptr;                      // pointer to structs in linked list
   sprintf( countStmt, hbcCountStmtFmt, hbcpfx );
   /* prepare statement to return count of stars matching parameters; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_prepare_v2( pDb, countStmt, strlen(countStmt)+1, &pStmt, 0)) {
+# else
+  if (SQLITE_OK != sqlite3_prepare( pDb, countStmt, strlen(countStmt)+1, &pStmt, 0)) {
+# endif
     free(countStmt);
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
@@ -116,7 +125,11 @@ pTYC2rtn ptr;                      // pointer to structs in linked list
     sprintf( stmt, hbcStmtFmt, hbcpfx, hbcpfx );
     /* prepare statement; return on fail */
     --failRtn;
+# ifdef SQLITE3_HAS_V2S
     if (SQLITE_OK != sqlite3_prepare_v2( pDb, stmt, strlen(stmt)+1, &pStmt, 0)) {
+#   else
+    if (SQLITE_OK != sqlite3_prepare( pDb, stmt, strlen(stmt)+1, &pStmt, 0)) {
+#   endif
       free(stmt);
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
@@ -208,13 +221,21 @@ FILE *f;
 
   /* open DB; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_open_v2( hbcSQLfilename, &pDb, SQLITE_OPEN_READONLY, (char *) 0)) {
+# else
+  if (SQLITE_OK != sqlite3_open( hbcSQLfilename, &pDb)) {
+# endif
     if (pDb) sqlite3_close(pDb);
     return failRtn;
   }
   /* prepare statement to return count of stars matching parameters; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_prepare_v2( pDb, pathLookupStmt, strlen(pathLookupStmt)+1, &pStmt, 0)) {
+# else
+  if (SQLITE_OK != sqlite3_prepare( pDb, pathLookupStmt, strlen(pathLookupStmt)+1, &pStmt, 0)) {
+# endif
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
     return failRtn;

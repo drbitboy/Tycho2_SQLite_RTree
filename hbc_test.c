@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
+#include "localmalloc.h"
 #include "hbclib.h"
 
 /*    Limits (Pleiades):  passed to hbcRDMselect */

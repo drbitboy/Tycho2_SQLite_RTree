@@ -1,7 +1,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include "localmalloc.h"
+#include "config.h"
 #include "tyc2lib.h" // includes sqlite3.h
 
 /* Select on Mag
@@ -47,12 +48,20 @@ pTYC2rtn ptr;                      // pointer to strucs in linked list
 
   /* open DB; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_open_v2( tyc2SQLfilename, &pDb, SQLITE_OPEN_READONLY, (char *) 0)) {
+# else
+  if (SQLITE_OK != sqlite3_open( tyc2SQLfilename, &pDb)) {
+# endif
     if (pDb) sqlite3_close(pDb);
   }
   /* prepare statement to return count of stars matching parameters; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_prepare_v2( pDb, countStmt, strlen(countStmt)+1, &pStmt, 0)) {
+# else
+  if (SQLITE_OK != sqlite3_prepare( pDb, countStmt, strlen(countStmt)+1, &pStmt, 0)) {
+# endif
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
     return failRtn;
@@ -94,7 +103,11 @@ pTYC2rtn ptr;                      // pointer to strucs in linked list
 
     /* prepare statement; return on fail */
     --failRtn;
+# ifdef SQLITE3_HAS_V2S
     if (SQLITE_OK != sqlite3_prepare_v2( pDb, stmt, strlen(stmt)+1, &pStmt, 0)) {
+# else
+    if (SQLITE_OK != sqlite3_prepare( pDb, stmt, strlen(stmt)+1, &pStmt, 0)) {
+# endif
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
       return failRtn;
@@ -187,13 +200,21 @@ FILE *f;
 
   /* open DB; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_open_v2( tyc2SQLfilename, &pDb, SQLITE_OPEN_READONLY, (char *) 0)) {
+# else
+  if (SQLITE_OK != sqlite3_open( tyc2SQLfilename, &pDb)) {
+# endif
     if (pDb) sqlite3_close(pDb);
     return failRtn;
   }
   /* prepare statement to return count of stars matching parameters; return on fail */
   --failRtn;
+# ifdef SQLITE3_HAS_V2S
   if (SQLITE_OK != sqlite3_prepare_v2( pDb, pathLookupStmt, strlen(pathLookupStmt)+1, &pStmt, 0)) {
+# else
+  if (SQLITE_OK != sqlite3_prepare( pDb, pathLookupStmt, strlen(pathLookupStmt)+1, &pStmt, 0)) {
+# endif
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
     return failRtn;
