@@ -236,7 +236,7 @@ FILE *f;
   }
   /* extract path from record and copy it to the path variable */
   --failRtn;
-  if ( !(rtnPtr = sqlite3_column_text(pStmt, 0)) ) {
+  if ( !(rtnPtr = (const char *) sqlite3_column_text(pStmt, 0)) ) {
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
     return failRtn;
