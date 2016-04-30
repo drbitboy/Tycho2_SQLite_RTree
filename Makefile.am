@@ -22,8 +22,8 @@ pyhbctest.out: bsc5.sqlite3
 	$(RM) $@
 	python hbc_loadindex.py test > $@
 
-bsc5.sqlite3:
-	python hbc_loadindex.py reload
+bsc5.sqlite3: BSC5
+	python hbc_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
 
 
 testtyc2: pytest.out ctest.out
@@ -40,8 +40,8 @@ pytest.out: tyc2.sqlite3
 	$(RM) $@
 	python tyc2_loadindex.py test > $@
 
-tyc2.sqlite3:
-	python tyc2_loadindex.py reload
+tyc2.sqlite3: index.dat suppl_1.dat catalog.dat
+	python tyc2_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
 
 oldclean:
 	$(RM) ctest.out pytest.out tyc2_test tyc2_test.o tyc2lib.o \

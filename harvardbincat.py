@@ -147,6 +147,9 @@ class HBC:
 
   lsb, msb, fmts = "<", ">", "llllllL"
 
+  try: SEEK_SET = os.SEEK_SET
+  except: SEEK_SET = 0
+
   ######################################################################
   ### Parse first 28 bytes of Harvard Binary Catalog
   def __init__(s,first28Arg=None,fileArg=None):
@@ -162,7 +165,7 @@ class HBC:
       else:
 
         ### Otherwise, treat fileArg as open file
-        fileArg.seek( 0, os.SEEK_SET )
+        fileArg.seek( 0, HBC.SEEK_SET )
         s.first28 = fileArg.read(28)
 
     else:
@@ -236,7 +239,7 @@ class HBC:
       else                   : fyle = fileArg
 
       ### Seek to record offset and ready bytes
-      fyle.seek(28 + (offset*s.nbent), os.SEEK_SET)
+      fyle.seek(28 + (offset*s.nbent), HBC.SEEK_SET)
       s.string = fyle.read(s.nbent)
 
       ### if file was opened above, close it here
