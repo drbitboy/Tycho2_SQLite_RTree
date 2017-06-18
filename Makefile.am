@@ -43,6 +43,9 @@ pytest.out: tyc2.sqlite3
 tyc2.sqlite3: index.dat suppl_1.dat catalog.dat
 	python tyc2_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
 
+clean-local:
+	$(RM) ctest.out pytest.out chbctest.out pyhbctest.out
+
 oldclean:
 	$(RM) ctest.out pytest.out tyc2_test tyc2_test.o tyc2lib.o \
 		chbctest.out pyhbctest.out hbc_test hbc_test.o hbclib.o \

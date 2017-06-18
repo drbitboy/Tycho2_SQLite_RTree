@@ -4,7 +4,7 @@
 AC_PREREQ([2.68])
 AC_INIT([FPS], [1.0], [drbitboy@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-AC_CONFIG_SRCDIR([fpsgui_ps.c])
+AC_CONFIG_SRCDIR([tyc2lib.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
@@ -14,6 +14,7 @@ AC_PROG_MAKE_SET
 
 # Checks for libraries.
 AC_CHECK_LIB([sqlite3], [sqlite3_open])
+AC_CHECK_LIB([curl], [curl_easy_init])
 #AC_CHECK_LIB([sqlite3], [sqlite3_open_v2])
 
 # Checks for header files.
