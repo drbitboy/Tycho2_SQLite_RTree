@@ -36,6 +36,8 @@ Quick start
     make test
 
 
+Overview
+----
 
 From comments in tyc2_loadindex.py:
 
@@ -52,7 +54,8 @@ Creates four tables:
 It may make sense to put the whole catalog into an R-Tree, but I'm just winging it and I am not sure if the R-Tree module would work for zero-sized ranges.
 The nice thing about doing catalog is that magnitude could be the third axis.
 
-Usage:
+Usage
+----
 
   python tyc2_loadindex.py [reload] [test[plot]]
 
@@ -61,7 +64,8 @@ Usage:
   make clean test
 
 
-Prerequisites:
+Prerequisites
+----
 
 - SQLite (see import sqlite3 below)
 
