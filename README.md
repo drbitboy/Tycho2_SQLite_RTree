@@ -9,6 +9,7 @@ Quick start
 
     git clone https://github.com/drbitboy/Tycho2_SQLite_RTree.git
     cd Tycho2_SQLite_RTree/
+    touch Makefile.am Makefile.in
     ./configure
     make test
 
@@ -21,6 +22,12 @@ Quick start with explanations
 
     git clone https://github.com/drbitboy/Tycho2_SQLite_RTree.git
     cd Tycho2_SQLite_RTree/
+
+
+    ####################################################################
+    ### Ensure automake does not run
+
+    touch Makefile.am Makefile.in
 
 
     ####################################################################
