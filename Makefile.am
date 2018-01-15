@@ -25,6 +25,9 @@ pyhbctest.out: bsc5.sqlite3
 bsc5.sqlite3: BSC5
 	python hbc_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
 
+BSC5:
+	wget -nv http://tdc-www.harvard.edu/catalogs/BSC5
+
 
 testtyc2: pytest.out ctest.out
 	md5sum $^ || md5 $^
@@ -42,6 +45,12 @@ pytest.out: tyc2.sqlite3
 
 tyc2.sqlite3: index.dat suppl_1.dat catalog.dat
 	python tyc2_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
+
+catalog.dat:
+	python httpgunzip.py --doit tyc2.dat
+
+index.dat suppl_1.dat:
+	python httpgunzip.py --doit $@
 
 clean-local:
 	$(RM) ctest.out pytest.out chbctest.out pyhbctest.out

@@ -6,33 +6,27 @@ Accessing the Tycho2 star catalog using the R-Tree module of SQLite.
 
 Quick start
 ----
-    
-    ####################################################################
-    ### Get and build star catalog SQLite R*Tree code
 
     git clone https://github.com/drbitboy/Tycho2_SQLite_RTree.git
     cd Tycho2_SQLite_RTree/
+    ./configure
+    make test
+
+
+Quick start with explanations
+----
+
+    ####################################################################
+    ### Get star catalog SQLite R*Tree code and CHDIR into repository
+
+    git clone https://github.com/drbitboy/Tycho2_SQLite_RTree.git
+    cd Tycho2_SQLite_RTree/
+
+
+    ####################################################################
+    ### Configure, build and test
+
     ./configure 
-    make
-
-
-    ####################################################################
-    ### Get Tycho-2 star catalog and put into SQLite3 file
-
-    python httpgunzip.py --doit index.dat suppl_1.dat 0 tyc2.dat ReadMe
-    python tyc2_loadindex.py  reload
-
-
-    ####################################################################
-    ### Get Harvard Bright Star Catalog and put into SQLite3 file
-
-    wget http://tdc-www.harvard.edu/catalogs/BSC5
-    python hbc_loadindex.py reload
-
-
-    ####################################################################
-    ### Testing
-
     make test
 
 

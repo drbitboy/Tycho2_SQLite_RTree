@@ -3,7 +3,7 @@ httpgunzip.py - Get large GZIPped files from FTP server, including those
                 that are GZIPped in pieces e.g. tyc2.dat as
                 tyc2.dat.00.gz, tyc2.01.gz, ...
 
-Usage:  python httpgunzip.py index.dat suppl_1.dat 0 tyc2.dat ReadMe
+Usage:  python httpgunzip.py index.dat suppl_1.dat tyc2.dat ReadMe
 
 N.B. This script was created to download Tycho-2 star catalog and index
      files from Univ. Strasburg in France; the httpgunzip class can do
