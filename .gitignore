@@ -3,9 +3,11 @@ ReadMe
 bsc5.sqlite3
 catalog.dat
 ctest.out
+chbctest.out
+pytest.out
+pyhbctest.out
 data
 index.dat
-pytest.out
 suppl_1.dat
 suppl_2.dat
 tyc2.sqlite3
@@ -13,3 +15,28 @@ tyc2_test
 tyc2_test.exe
 tyc2_test.o
 tyc2lib.o
+hbc_test
+hbc_test.o
+hbclib.o
+.deps/
+harvardbincat.py?
+
+
+# autotools products
+Makefile
+autom4te.cache/
+config.h
+config.log
+config.status
+libtool
+src/.deps/
+src/Makefile
+src/fps
+stamp-h1
+
+
+# Misc files often created by Brian Carcich
+x.x
+y.y
+z.z
+a.a

@@ -9,9 +9,7 @@ Quick start
 
     git clone https://github.com/drbitboy/Tycho2_SQLite_RTree.git
     cd Tycho2_SQLite_RTree/
-    touch Makefile.am Makefile.in
-    ./configure
-    make test
+    ./one_step_build.bash
 
 
 Quick start with explanations
@@ -25,16 +23,23 @@ Quick start with explanations
 
 
     ####################################################################
-    ### Ensure automake does not run
+    ### Configure and build
 
-    touch Makefile.am Makefile.in
+    ./one_step_build.bash
 
 
-    ####################################################################
-    ### Configure, build and test
+    ### That one_step_build.bash script does the following:
 
-    ./configure 
-    make test
+       #################################################################
+       ### Ensure automake does not run
+
+       # touch --date="`date`" configure.ac Makefile.am aclocal.m4 Makefile.in configure
+
+
+       #################################################################
+       ### Configure, build and test
+
+       # ./configure 
 
 
 Overview
