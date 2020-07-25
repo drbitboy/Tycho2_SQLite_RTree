@@ -27,7 +27,7 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 ----
 ### SQLite3 typical query
 
-The design typical query, e.g.  to retrieve all stars brighter than 17th magnitude in the spatial "box" defined by
+The design typical query, e.g.  to retrieve all stars darker than 18th magnitude in the spatial "box" defined by
 
     [123 < RA < 124]
 
@@ -37,28 +37,39 @@ and
 
 will be something like this:
 
-    SELECT gaiartree.offset
-         , gaiartree.ralo
-         , gaiartree.declo
+    ATTACH 'gaia.sqlite3' AS light;
 
-         , gaialight.pmra
-         , gaialight.pmdec
-         , gaialight.phot_g
-         , gaialight.phot_bp
-         , gaialight.phot_rp
+    ATTACH 'gaia_heavy.sqlite3' AS heavy;
 
-    FROM gaiartree
+    SELECT light.gaiartree.ralo
+         , light.gaiartree.declo
 
-    INNER JOIN gaialight
-    ON gaiatree.offset=gaialight.offset
+         , light.gaialight.phot_g_mean_mag
+         , light.gaialight.phot_bp_mean_mag
+         , light.gaialight.phot_rp_mean_mag
 
-    WHERE gaiatree.ralo > 123.0
-      AND gaiatree.rahi < 124.0
+         , heavy.gaiaheavy.source_id
+         , heavy.gaiaheavy.offset
 
-      AND gaiatree.declo > -45.0 
-      AND gaiatree.dechi < -44.0 
+    FROM light.gaiartree
 
-      AND gaiatree.maghi < 17.0
+    INNER JOIN light.gaialight
+    ON light.gaiartree.offset=light.gaialight.offset
+
+    INNER JOIN heavy.gaiaheavy
+    ON light.gaiartree.offset=heavy.gaiaheavy.offset
+
+    WHERE light.gaiartree.ralo>123.0
+      AND light.gaiartree.rahi<124.0
+      AND light.gaiartree.declo>-45.0
+      AND light.gaiartree.dechi<-44.0
+      AND light.gaiartree.lomag>18.0
+
+    ORDER BY light.gaialight.phot_g_mean_mag DESC
+           , light.gaialight.phot_bp_mean_mag DESC
+           , light.gaialight.phot_rp_mean_mag DESC
+
+    LIMIT 10
     ;
 
 The data are split into two database files (DBs):  light and heavy.  All tables in both DBs contain the same number of rows, i.e. one per star.  All tables have a column called 'offset' that is a 32-bit INTeger and the PRIMARY KEYi for the table; it is intended to be used for JOINs.  The light table can be used on its own, and as the heavy data may not be needed for all applications, it was kept separate to save disk space for those applications.
@@ -67,7 +78,7 @@ The light DB is gaia.sqlite3, and contains the R-Tree table for lookups and a li
 
 #### N.B. the R-Tree schema does not include the third dimension, range, implicit in the the three-dimensional nature of the Gaia dataset.
 
-The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As noted above it does not need to be present to use the light DB.  Also, retrieving the heavy data will require a separate query as it is in a separate DB; this may be wrong and it appears the SQLite3 ATTACH statement may provide a way to do JOINs across multiple DBs.
+The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As noted above it does not need to be present to use the light DB.
 
 ----
 ### SQLite3 schema
@@ -130,6 +141,7 @@ The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As
 * count_pickled_stars.py - Test script of GAIA pickle file code; sum number of rows in GAIA pickle files to get total
 * overlap_check_gaia.py - Test script of GAIA pickle file data; verify that SourceIDs do not overlap between GAIA CSV files
 * plot_count_gaia.py - Test script of GAIA pickle file data; parse and plot output from count_gaia.py
+* regression_test.py - Test script of GAIA SQLite3 R-Tree database; compare actual and expected results
 * timings.py - Download performance metrics; evaluate and plot time it takes for each GAIA CSV file to be downloaded and pickled
 * vork.py - Experimenting with os.fork; used to make gaia.py run faster
 
