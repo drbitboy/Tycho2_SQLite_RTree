@@ -63,3 +63,16 @@ MD5SUM.txt contents look like this:
     ...
     9f4f16d35f368bbd51721d27c0946e9d  GaiaSource_999717001796824064_999922369954904960.csv.gz
     0623700d067517f2cd20ddf306000bc8  GaiaSource_999922404314639104_1000172126596665472.csv.gz
+
+### Other scripts
+
+* count_gaia.py - Test script of GAIA pickle file data; search GAIA star database using RA/DEC boxes approximately one square degree in size; accumulate count of stars found
+* count_pickled_stars_by_mag.py - Test script of SQLite3 database tables; counts stars in table and at different magnitudes
+* count_pickled_stars.py - Test script of GAIA pickle file code; sum number of rows in GAIA pickle files to get total
+* overlap_check_gaia.py - Test script of GAIA pickle file data; verify that SourceIDs do not overlap between GAIA CSV files
+* plot_count_gaia.py - Test script of GAIA pickle file data; parse and plot output from count_gaia.py
+* timings.py - Download performance metrics; evaluate and plot time it takes for each GAIA CSV file to be downloaded and pickled
+* vork.py - Experimenting with os.fork; used to make gaia.py run faster
+
+N.B.
+* See in-script comments for more detail
