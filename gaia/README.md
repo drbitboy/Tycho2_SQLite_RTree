@@ -6,13 +6,13 @@ Usage:
 
     python gaia.py getallgaia buildsqldb
 
-    - See comments in gaia.py for more options
-    - Limited to stars brighter than magnitude 18.6 in any of G, BP, or RP bands
-    - Takes of order 1d to complete
-    - Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
-    - Writes 5MB+ file csv/MD5SUM.txt
-    - Writes 165GB in 61,234 files in ./gaiapickles/
-      - These may be deleted after the databases are written
+* See comments in gaia.py for more options
+* Limited to stars brighter than magnitude 18.6 in any of G, BP, or RP bands
+* Takes of order 1d to complete
+* Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
+* Writes 5MB+ file csv/MD5SUM.txt
+* Writes 165GB in 61,234 files in ./gaiapickles/
+* These may be deleted after the databases are written
 
 #### Gaia Data Details
 
