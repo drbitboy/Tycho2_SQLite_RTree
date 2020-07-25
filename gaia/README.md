@@ -9,7 +9,7 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 ----
 ### Usage
 
-    python gaia.py getallgaia buildsqldb
+    python gaia.py getallgaia buildsqlitedb
 
 * Takes order 1d to complete
 * See comments in gaia.py for more options
