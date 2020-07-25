@@ -1,14 +1,13 @@
 ## Gaia translation of Tycho SQLite R-Tree code
 
-### Retrieve ESA/Gaia star catalog data, put same into SQLite3 R-Tree tables
 ----
+### Retrieve ESA/Gaia star catalog data, put same into SQLite3 R-Tree tables
 
 Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 
 
 ----
 ### Usage
-====
 
     python gaia.py getallgaia buildsqldb
 
@@ -24,8 +23,8 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 
 
 
+----
 ### SQLite3 schema
-====
 
     $ sqlite3 othergaia/gaia.sqlite3 
 
@@ -71,13 +70,12 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
     ,parallax_pmdec_corr REAL DEFAULT NULL
     ,pmra_pmdec_corr REAL DEFAULT NULL
     );
-====
 
 
 
 
+----
 ### Other scripts
-====
 
 * count_gaia.py - Test script of GAIA pickle file data; search GAIA star database using RA/DEC boxes approximately one square degree in size; accumulate count of stars found
 * count_pickled_stars_by_mag.py - Test script of SQLite3 database tables; counts stars in table and at different magnitudes
@@ -92,8 +90,8 @@ N.B.
 
 
 
+----
 ### Gaia Data Details
-====
 
 Data Release 2 (DR2) GZIPped CSV data files are here:  http://cdn.gea.esac.esa.int/Gaia/gdr2/gaia_source/csv/
 
