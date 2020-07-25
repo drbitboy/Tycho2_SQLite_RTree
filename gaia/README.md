@@ -12,7 +12,7 @@ Usage:
 * Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
 * Writes 5MB+ file csv/MD5SUM.txt
 * Writes 165GB in 61,234 files in ./gaiapickles/
-* These may be deleted after the databases are written
+  * These may be deleted after the databases are written
 
 #### Gaia Data Details
 
@@ -29,7 +29,7 @@ Un-gzipped CSV files look like this:
 
 N.B.
 * Decimal numbers in [source_id] data column contain each star's Level 12 HEALpix value in bits 35-62, but those HEALpix values are from the initial instrument observation, not from final RA and DEC solution, but those are from the initial instrument observation, not from final RA and DEC
-* Refer to Gaia web site for more data about source_id values
+  * Refer to Gaia web site for more data about source_id values
 * Some fields are empty (adjacent commas)
 * All rows have [Gaia DR2 <source ID>] as second column, [designation]
 * All rows have 2015.5 in ref_epoch column
