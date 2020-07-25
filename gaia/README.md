@@ -1,11 +1,12 @@
 ## Gaia translation of Tycho SQLite R-Tree code
 
 ### Retrieve ESA/Gaia star catalog data, put same into SQLite3 R-Tree tables
-====
+----
 
 Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 
 
+----
 ### Usage
 ====
 
