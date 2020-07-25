@@ -75,4 +75,4 @@ MD5SUM.txt contents look like this:
 * vork.py - Experimenting with os.fork; used to make gaia.py run faster
 
 N.B.
-* See in-script comments for more detail
+* See in-script comments for usage and more detail
