@@ -14,6 +14,7 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 * Takes order 1d to complete
 * See comments in gaia.py for more options
 * Limited to stars brighter than magnitude 18.6 (default) in any of G, BP, or RP bands
+  * Includes about 803Mstars i.e. roughly half of the total Gaia data set.
   * This may be changed
 * Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
 * Writes 5MB+ file csv/MD5SUM.txt
@@ -25,6 +26,39 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 
 ----
 ### SQLite3 schema
+
+The desired typical query, e.g.  to retrieve all stars brighter than 17th magnitude in the spatial "box" defined by [123 < RA < 124] and [-45 < Dec < 44], will be something like this:
+
+    SELECT gaiartree.offset
+         , gaiartree.ralo
+         , gaiartree.declo
+
+         , gaialight.pmra
+         , gaialight.pmdec
+         , gaialight.phot_g
+         , gaialight.phot_bp
+         , gaialight.phot_rp
+
+    FROM gaiartree
+
+    INNER JOIN gaialight
+    ON gaiatree.offset=gaialight.offset
+
+    WHERE gaiatree.ralo > 123.0
+      AND gaiatree.rahi < 124.0
+      AND gaiatree.declo > -45.0 
+      AND gaiatree.dechi < -44.0 
+      AND gaiatree.maghi < 17.0
+    ;
+
+
+The data are split into two database files (DBs):  light and heavy.  All tables in both DBs contain the same number of rows, i.e. one per star.  All tables have a column called 'offset' that is a 32-bit INTeger and the PRIMARY KEYi for the table; it is intended to be used for JOINs.  The light table can be used on its own, and as the heavy data may not be needed for all applications, it was kept separate to save disk space for those applications.
+
+The light DB is gaia.sqlite3, and contains the R-Tree table for lookups and a light table for additional spatial and magnitude data (parallax, proper motion; magnitude details).  In the R-Tree table, the three data values, RA, Dec and Magnitude are each represented as a pair of low and high values.  In practice the low and high for RA values are the same, as they are for the Dec value.  The magnitudes pair, maglo and maghi, are the minimum and the maximum of the magnitude for each the three bands, G, BP, and RP, although for about 10% of the stars there are no BP or RP data and the single G magnitude is used for the both values of the magnitude pair.
+
+The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As noted above it does not need to be present to use the light DB.  Also, retrieving the heavy data will require a separate query as it is in a separate DB; this may be wrong and it appears the SQLite3 ATTACH statement may provide a way to do JOINs across multiple DBs.
+
+    SELECT  from 
 
     $ sqlite3 othergaia/gaia.sqlite3 
 
