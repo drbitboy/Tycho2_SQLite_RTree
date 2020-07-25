@@ -27,7 +27,11 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 ----
 ### SQLite3 typical query
 
-The desired typical query, e.g.  to retrieve all stars brighter than 17th magnitude in the spatial "box" defined by [123 < RA < 124] and [-45 < Dec < 44], will be something like this:
+The design typical query, e.g.  to retrieve all stars brighter than 17th magnitude in the spatial "box" defined by
+    [123 < RA < 124]
+and
+    [-45 < Dec < -44]
+will be something like this:
 
     SELECT gaiartree.offset
          , gaiartree.ralo
