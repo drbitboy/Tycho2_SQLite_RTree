@@ -13,12 +13,12 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 
 * Takes order 1d to complete
 * See comments in gaia.py for more options
-* Limited to stars brighter than magnitude 18.6 (default) in any of G, BP, or RP bands
-  * Includes about 803Mstars i.e. roughly half of the total Gaia data set.
+* Limited to stars brighter than magnitude 18.0 (default) in any of G, BP, or RP bands
+  * Includes about ???Mstars i.e. roughly half of the total Gaia data set.
   * This may be changed
-* Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
+* Writes ???GB in two SQLite3 database files in ./gaia*.sqlite3
 * Writes 5MB+ file csv/MD5SUM.txt
-* Writes 165GB in 61,234 files in ./gaiapickles/
+* Writes ???GB in 61,234 files in ./gaiapickles/
   * These may be deleted after the databases are written
 
 

@@ -40,7 +40,7 @@ Actions:
                                            via the command line
                                     - See method get_all_gaia(...)
 
-      [--maglimit=]18.6 - upper limit of any G or BP or RP magnitude
+      [--maglimit=]18.0 - upper limit of any G or BP or RP magnitude
                           - the --...= prefix is not needed if the value
                             is a positive number
                           - if any of G or BP or RP magnitudesis lees
@@ -101,7 +101,7 @@ except:
   ### - CSV-to-pickle selection criteria:  13th character in MD5
   ###     hexdigest; magnitude limit; column names
   hexmd5all = '0123456789abcdef'.lower()
-  default_maglimit = 18.6
+  default_maglimit = 18.0
   default_scols = [s.strip() for s in """
 designation
 ra
