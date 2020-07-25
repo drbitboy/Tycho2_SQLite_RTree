@@ -54,8 +54,10 @@ will be something like this:
 
     WHERE gaiatree.ralo > 123.0
       AND gaiatree.rahi < 124.0
+
       AND gaiatree.declo > -45.0 
       AND gaiatree.dechi < -44.0 
+
       AND gaiatree.maghi < 17.0
     ;
 
