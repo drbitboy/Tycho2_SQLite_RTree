@@ -6,9 +6,10 @@ Usage:
 
     python gaia.py getallgaia buildsqldb
 
+* Takes order 1d to complete
 * See comments in gaia.py for more options
-* Limited to stars brighter than magnitude 18.6 in any of G, BP, or RP bands
-* Takes of order 1d to complete
+* Limited to stars brighter than magnitude 18.6 (default) in any of G, BP, or RP bands
+  * This may be changed
 * Writes 251GB in two SQLite3 database files in ./gaia*.sqlite3
 * Writes 5MB+ file csv/MD5SUM.txt
 * Writes 165GB in 61,234 files in ./gaiapickles/
