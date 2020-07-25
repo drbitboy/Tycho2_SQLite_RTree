@@ -2,7 +2,9 @@
 
 ### Retrieve ESA/Gaia star catalog data, put same into SQLite3 R-Tree tables
 
-Usage:
+Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
+
+### Usage
 
     python gaia.py getallgaia buildsqldb
 
@@ -15,7 +17,68 @@ Usage:
 * Writes 165GB in 61,234 files in ./gaiapickles/
   * These may be deleted after the databases are written
 
-#### Gaia Data Details
+### SQLite3 schema
+
+    $ sqlite3 othergaia/gaia.sqlite3 
+
+    SQLite version 3.31.1 2020-01-27 19:55:54
+
+    sqlite> .schema
+
+    CREATE VIRTUAL TABLE gaiartree using rtree(offset,ralo,rahi,declo,dechi,lomag,himag)
+    /* gaiartree("offset",ralo,rahi,declo,dechi,lomag,himag) */;
+    CREATE TABLE IF NOT EXISTS "gaiartree_rowid"(rowid INTEGER PRIMARY KEY,nodeno);
+    CREATE TABLE IF NOT EXISTS "gaiartree_node"(nodeno INTEGER PRIMARY KEY,data);
+    CREATE TABLE IF NOT EXISTS "gaiartree_parent"(nodeno INTEGER PRIMARY KEY,parentnode);
+    CREATE TABLE gaialight
+    (offset INT PRIMARY KEY
+    ,parallax REAL DEFAULT NULL
+    ,pmra REAL DEFAULT NULL
+    ,pmdec REAL DEFAULT NULL
+    ,phot_g_mean_mag REAL NOT NULL
+    ,phot_bp_mean_mag REAL DEFAULT NULL
+    ,phot_rp_mean_mag REAL DEFAULT NULL
+    );
+
+    $ sqlite3 othergaia/gaia_heavy.sqlite3 
+
+    sqlite> .schema
+
+    CREATE TABLE gaiaheavy
+    (offset INT PRIMARY KEY
+    ,source_id BIGINT NOT NULL
+    ,ra_error REAL DEFAULT NULL
+    ,dec_error REAL DEFAULT NULL
+    ,parallax_error REAL DEFAULT NULL
+    ,pmra_error REAL DEFAULT NULL
+    ,pmdec_error REAL DEFAULT NULL
+    ,ra_dec_corr REAL DEFAULT NULL
+    ,ra_parallax_corr REAL DEFAULT NULL
+    ,ra_pmra_corr REAL DEFAULT NULL
+    ,ra_pmdec_corr REAL DEFAULT NULL
+    ,dec_parallax_corr REAL DEFAULT NULL
+    ,dec_pmra_corr REAL DEFAULT NULL
+    ,dec_pmdec_corr REAL DEFAULT NULL
+    ,parallax_pmra_corr REAL DEFAULT NULL
+    ,parallax_pmdec_corr REAL DEFAULT NULL
+    ,pmra_pmdec_corr REAL DEFAULT NULL
+    );
+
+
+### Other scripts
+
+* count_gaia.py - Test script of GAIA pickle file data; search GAIA star database using RA/DEC boxes approximately one square degree in size; accumulate count of stars found
+* count_pickled_stars_by_mag.py - Test script of SQLite3 database tables; counts stars in table and at different magnitudes
+* count_pickled_stars.py - Test script of GAIA pickle file code; sum number of rows in GAIA pickle files to get total
+* overlap_check_gaia.py - Test script of GAIA pickle file data; verify that SourceIDs do not overlap between GAIA CSV files
+* plot_count_gaia.py - Test script of GAIA pickle file data; parse and plot output from count_gaia.py
+* timings.py - Download performance metrics; evaluate and plot time it takes for each GAIA CSV file to be downloaded and pickled
+* vork.py - Experimenting with os.fork; used to make gaia.py run faster
+
+N.B.
+* See in-script comments for usage and more detail
+
+### Gaia Data Details
 
 Data Release 2 (DR2) GZIPped CSV data files are here:  http://cdn.gea.esac.esa.int/Gaia/gdr2/gaia_source/csv/
 
@@ -64,15 +127,3 @@ MD5SUM.txt contents look like this:
     9f4f16d35f368bbd51721d27c0946e9d  GaiaSource_999717001796824064_999922369954904960.csv.gz
     0623700d067517f2cd20ddf306000bc8  GaiaSource_999922404314639104_1000172126596665472.csv.gz
 
-### Other scripts
-
-* count_gaia.py - Test script of GAIA pickle file data; search GAIA star database using RA/DEC boxes approximately one square degree in size; accumulate count of stars found
-* count_pickled_stars_by_mag.py - Test script of SQLite3 database tables; counts stars in table and at different magnitudes
-* count_pickled_stars.py - Test script of GAIA pickle file code; sum number of rows in GAIA pickle files to get total
-* overlap_check_gaia.py - Test script of GAIA pickle file data; verify that SourceIDs do not overlap between GAIA CSV files
-* plot_count_gaia.py - Test script of GAIA pickle file data; parse and plot output from count_gaia.py
-* timings.py - Download performance metrics; evaluate and plot time it takes for each GAIA CSV file to be downloaded and pickled
-* vork.py - Experimenting with os.fork; used to make gaia.py run faster
-
-N.B.
-* See in-script comments for usage and more detail
