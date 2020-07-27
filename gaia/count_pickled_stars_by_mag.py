@@ -1,11 +1,12 @@
 """
 Count number of stars in GAIA pickle files, also numbers of stars with
-magnitude less than or equal to 18.0 and to 17.6, 
+magnitude less than or equal to 17.5 and to 17.0, 
 
 Usage:
 
-  find gaiapickle/ -name 'GaiaSource_*_*.gaiapickle" \
-  | python count_pickled_stars_by_mag.py
+  find gaiapickles/ -name 'GaiaSource_*_*.gaiapickle' \
+  | python count_pickled_stars_by_mag.py \
+  | tee count_pickled_stars_by_mag.log
 
 """
 import os
@@ -13,7 +14,7 @@ import sys
 import gaia
 
 ### Initialize start counts, file count
-nall,n176,n180,nfile = [0]*4
+nall,n170,n175,nfile = [0]*4
 
 ### Loop over lines from STDIN
 for rawline in sys.stdin:
@@ -38,20 +39,21 @@ for rawline in sys.stdin:
     ### Get minimum, non-None magnitude
     minmag = min([mag for mag in [row[i] for i in imagcols] if not None is mag])
 
-    ### Increment count for magnitudes 18.0 and 17.6, as appropriate
-    if minmag > 18.0: continue
-    n180 += 1
-    if minmag > 17.6: continue
-    n176 += 1
+    ### Increment count for magnitudes 17.5 and 17.0, as appropriate
+    if minmag > 17.5: continue
+    n175 += 1
+    if minmag > 17.0: continue
+    n170 += 1
 
   ### Increment file counter
   nfile += 1
 
   ### Progress indicator
   if nfile % 1000: continue
-  sys.stdout.write('.')
-  sys.stdout.flush()
+  sys.stderr.write('.')
+  sys.stderr.flush()
 
 ### Output results
-print('')
-print(dict(n176=n176,n180=n180,nall=nall))
+sys.stderr.write('\n')
+sys.stderr.flush()
+print(dict(n170=n170,n175=n175,nall=nall))
