@@ -47,6 +47,8 @@ tdsnp = numpy.array(tds)
 tds.sort()
 L = len(tds)
 tdsmean,tdsmedian = tdsnp.mean(),tds[L>>1]
+
+### - Sum number of bytes in CSV GZ files to calculate download bitrate
 with gzip.open('csv/csv_gaia_index.html.gz','rt') as fgz:
   allbytes = [int(s.strip().split()[-1]) for s in fgz if 'GaiaSource_' in s]
   nbits = sum(allbytes) << 3

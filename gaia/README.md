@@ -14,11 +14,10 @@ Resulting SQLite3 database files enable fast access by RA, Dec and Magnitude
 * Takes order 1d to complete
 * See comments in gaia.py for more options
 * Limited to stars brighter than magnitude 18.0 (default) in any of G, BP, or RP bands
-  * Includes about ???Mstars i.e. roughly half of the total Gaia data set.
-  * This may be changed
-* Writes ???GB in two SQLite3 database files in ./gaia*.sqlite3
+  * Includes about 557Mstars i.e. roughly one-third of the total Gaia data set.
+* Writes 175GB in two SQLite3 database files in ./gaia*.sqlite3
 * Writes 5MB+ file csv/MD5SUM.txt
-* Writes ???GB in 61,234 files in ./gaiapickles/
+* Writes 115GB in 61,234 files in ./gaiapickles/
   * These may be deleted after the databases are written
 
 
@@ -134,7 +133,7 @@ The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As
 
 
 ----
-### Other scripts
+### Other files
 
 * count_gaia.py - Test script of GAIA pickle file data; search GAIA star database using RA/DEC boxes approximately one square degree in size; accumulate count of stars found
 * count_pickled_stars_by_mag.py - Test script of SQLite3 database tables; counts stars in table and at different magnitudes
@@ -144,6 +143,7 @@ The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As
 * regression_test.py - Test script of GAIA SQLite3 R-Tree database; compare actual and expected results
 * timings.py - Download performance metrics; evaluate and plot time it takes for each GAIA CSV file to be downloaded and pickled
 * vork.py - Experimenting with os.fork; used to make gaia.py run faster
+* csv/csv_gaia_index.html.gz - Compressed listing of data source web page; used by timings.py
 
 N.B.
 * See in-script comments for usage and more detail
