@@ -13,6 +13,7 @@ Usage:
 """
 import os
 import sys
+import gzip
 import numpy
 from datetime import datetime,timedelta
 
@@ -46,7 +47,12 @@ tdsnp = numpy.array(tds)
 tds.sort()
 L = len(tds)
 tdsmean,tdsmedian = tdsnp.mean(),tds[L>>1]
-print(dict(mean=tdsmean,median=tdsmedian))
+with gzip.open('csv/csv_gaia_index.html.gz','rt') as fgz:
+  allbytes = [int(s.strip().split()[-1]) for s in fgz if 'GaiaSource_' in s]
+  nbits = sum(allbytes) << 3
+  Mbps = 1e-6 * nbits / (tdsmean * len(allbytes))
+
+print(dict(mean=tdsmean,median=tdsmedian,Mbps=Mbps))
 
 ########################################################################
 ### Start plotting
@@ -56,7 +62,7 @@ import matplotlib.pyplot as plt
 fig,(ax0,ax1,) = plt.subplots(2,1)
 
 ### Figure title
-fig.suptitle('After processing {0} CSVs'.format(L))
+fig.suptitle('After processing {0} CSVs; {1:.1f}Mbps'.format(L,Mbps))
 
 ### Plot raw data
 ax0.set_yscale('log')
