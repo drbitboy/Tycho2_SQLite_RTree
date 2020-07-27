@@ -2,6 +2,14 @@
 Search GAIA star database using RA/DEC boxes approximately
 one square degree in size; accumulate count of stars found
 
+Usage:
+
+  python -u count_gaia.py | tee count_gaia.log
+
+  ### ... then ...
+
+  python plot_count_gaia.py
+
 """
 import os
 import sys
