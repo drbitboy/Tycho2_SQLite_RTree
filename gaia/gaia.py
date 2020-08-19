@@ -511,10 +511,10 @@ Usage:
 
 """
 
-  def __init__(self,offset,dikt):
-    """Load zip(gcsv.column_names,gcsv.rows[offset])"""
+  def __init__(self,idoffset,dikt):
+    """Load zip(gcsv.column_names,gcsv.rows[idoffset])"""
 
-    self.offset = offset
+    self.idoffset = idoffset
 
     g = dikt.get
     self.source_id = g(kSourceid,None)
@@ -615,7 +615,7 @@ filepathss
     ### and an offset of -1
     self.pfxs = [triple[-1] for triple in lt[::filestride]]
     self.rows = []
-    self.offset = -1
+    self.idoffset = -1
 
   def next(self):
     """Get the next row in this iterator"""
@@ -640,8 +640,8 @@ filepathss
       self.rows.sort(reverse=True)
 
     ### Increment offset, make dictionary of next row via .pop()
-    self.offset += 1
-    rtn = dict(offset=self.offset)
+    self.idoffset += 1
+    rtn = dict(idoffset=self.idoffset)
     rtn.update(self.dt_none_cols)
     rtn.update(zip(self.gpcols,self.rows.pop()))
 
@@ -749,11 +749,13 @@ Method argument is typically sys.argv[1:]
   cnheavy.commit()
 
   cu.execute("""
-CREATE VIRTUAL TABLE gaiartree using rtree(offset,ralo,rahi,declo,dechi,lomag,himag);"""
+CREATE VIRTUAL TABLE gaiartree using rtree(idoffset,ralo,rahi,declo,dechi,lomag,himag);"""
 )
   cu.execute("""
 CREATE TABLE gaialight
-(offset INT PRIMARY KEY
+(idoffset INT PRIMARY KEY
+,ra REAL NOT NULL
+,dec REAL NOT NULL
 ,parallax REAL DEFAULT NULL
 ,pmra REAL DEFAULT NULL
 ,pmdec REAL DEFAULT NULL
@@ -764,7 +766,7 @@ CREATE TABLE gaialight
 
   cuheavy.execute("""
 CREATE TABLE gaiaheavy
-(offset INT PRIMARY KEY
+(idoffset INT PRIMARY KEY
 ,source_id BIGINT NOT NULL
 ,ra_error REAL DEFAULT NULL
 ,dec_error REAL DEFAULT NULL
@@ -797,9 +799,9 @@ CREATE TABLE gaiaheavy
 
   ### SQL INSERT statement for the three tables
   ### N.B designation in .gaiapickle file is source_id from .gaiapickle
-  sqlRtree = "INSERT INTO gaiartree VALUES (:offset,:ra,:ra,:dec,:dec,:lomag,:himag)"
-  sqlLight = "INSERT INTO gaialight VALUES (:offset,:parallax,:pmra,:pmdec,:phot_g_mean_mag,:phot_rp_mean_mag,:phot_rp_mean_mag)"
-  sqlHeavy = "INSERT INTO gaiaheavy VALUES (:offset,:designation,:ra_error,:dec_error,:parallax_error,:pmra_error,:pmdec_error,:ra_dec_corr,:ra_parallax_corr,:ra_pmra_corr,:ra_pmdec_corr,:dec_parallax_corr,:dec_pmra_corr,:dec_pmdec_corr,:parallax_pmra_corr,:parallax_pmdec_corr,:pmra_pmdec_corr)"
+  sqlRtree = "INSERT INTO gaiartree VALUES (:idoffset,:ra,:ra,:dec,:dec,:lomag,:himag)"
+  sqlLight = "INSERT INTO gaialight VALUES (:idoffset,:ra,:dec,:parallax,:pmra,:pmdec,:phot_g_mean_mag,:phot_rp_mean_mag,:phot_rp_mean_mag)"
+  sqlHeavy = "INSERT INTO gaiaheavy VALUES (:idoffset,:designation,:ra_error,:dec_error,:parallax_error,:pmra_error,:pmdec_error,:ra_dec_corr,:ra_parallax_corr,:ra_pmra_corr,:ra_pmdec_corr,:dec_parallax_corr,:dec_pmra_corr,:dec_pmdec_corr,:parallax_pmra_corr,:parallax_pmdec_corr,:pmra_pmdec_corr)"
 
   ### Initialze list of dicts and its length, L
   dts = list()
@@ -818,9 +820,9 @@ CREATE TABLE gaiaheavy
     L += 1
 
     ### Show progress if so specified
-    offset = gaiarow['offset']
-    if do_progress and not (16777215&offset):
-      sys.stderr.write('{0}/'.format(offset))
+    idoffset = gaiarow['idoffset']
+    if do_progress and not (16777215&idoffset):
+      sys.stderr.write('{0}/'.format(idoffset))
       sys.stderr.flush()
 
     ### - Do INSERTs and COMMITs every 16,384 rows
