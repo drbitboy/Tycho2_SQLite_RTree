@@ -15,6 +15,7 @@ AC_PROG_MAKE_SET
 # Checks for libraries.
 AC_CHECK_LIB([sqlite3], [sqlite3_open])
 AC_CHECK_LIB([curl], [curl_easy_init])
+AC_CHECK_LIB([m], [sin])
 #AC_CHECK_LIB([sqlite3], [sqlite3_open_v2])
 
 # Checks for header files.

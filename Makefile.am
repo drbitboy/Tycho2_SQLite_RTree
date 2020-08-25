@@ -1,12 +1,26 @@
 
-bin_PROGRAMS = tyc2_test hbc_test
+bin_PROGRAMS = tyc2_test hbc_test gaia_test
 
 tyc2_test_SOURCES = tyc2_test.c tyc2lib.c tyc2lib.h localmalloc.h
 hbc_test_SOURCES = hbc_test.c hbclib.c hbclib.h localmalloc.h
+gaia_test_SOURCES = gaia_test.c gaialib.c gaialib.h localmalloc.h
 
 dist_doc_DATA = harvardbincat.py httpgunzip.py tyc2_loadindex_hogan.py hbc_loadindex.py sqlite3ghost.py tyc2_loadindex.py
 
-test: testtyc2 testhbc
+test: testtyc2 testhbc testgaia
+
+testgaia: gaiatest.out cgaiatest.out
+	md5sum $^ || md5 $^
+	diff -y -W110 $^ || true
+	diff -s $^ || true
+	sum $^
+
+cgaiatest.out: gaia_test gaia_subset.sqlite3
+	$(RM) $@
+	./gaia_test > $@
+
+gaia_subset.sqlite3:
+	wget -nv https://github.com/drbitboy/gaia_subset/raw/master/gaia_subset.sqlite3
 
 testhbc: pyhbctest.out chbctest.out
 	md5sum $^ || md5 $^
@@ -58,5 +72,6 @@ clean-local:
 oldclean:
 	$(RM) ctest.out pytest.out tyc2_test tyc2_test.o tyc2lib.o \
 		chbctest.out pyhbctest.out hbc_test hbc_test.o hbclib.o \
+		gaia_test gaia_test.o gaialib.o \
 		sqlite3.o
 
