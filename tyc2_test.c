@@ -75,7 +75,7 @@ int rtn;
 
   rtn = searcher("catalog");
 
-  /* ... if that was successful, then serach suppl_1.dat ... */
+  /* ... if that was successful, then search suppl_1.dat ... */
   if ( !rtn ) {
 
     himag = 9.0;     // suppl_1.dat has fewer stars:  loosen magnitude limit
