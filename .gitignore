@@ -18,6 +18,9 @@ tyc2lib.o
 hbc_test
 hbc_test.o
 hbclib.o
+gaia_test
+gaia_test.o
+gaialib.o
 .deps/
 harvardbincat.py?
 

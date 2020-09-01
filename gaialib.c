@@ -2,7 +2,7 @@
 #include "localmalloc.h"
 #include "gaialib.h"
 
-static char gaiaSelectStmt[] = { "SELECT gaiartree.idoffset, gaialight.ra, gaialight.dec, gaialight.phot_g_mean_mag FROM gaiartree INNER JOIN gaialight ON gaiartree.idoffset=gaialight.idoffset WHERE lomag<? AND rahi>? AND ralo<? AND dechi>?  AND declo<?  ORDER BY gaialight.phot_g_mean_mag ASC ;" };
+static char gaiaSelectStmt[] = { "SELECT gaiartree.idoffset, gaialight.ra, gaialight.dec, gaialight.phot_g_mean_mag FROM gaiartree INNER JOIN gaialight ON gaiartree.idoffset=gaialight.idoffset WHERE gaiartree.lomag<? AND gaiartree.rahi>? AND gaiartree.ralo<? AND gaiartree.dechi>?  AND gaiartree.declo<?  and gaialight.phot_g_mean_mag<? ORDER BY gaialight.phot_g_mean_mag ASC ;" };
 
 
 #define HARDLIMIT 1024
@@ -17,7 +17,7 @@ gaiaRDMselect(char* gaiaSQLfilename
 
 static double rpd = atan(1.0) / 45.0;
 
-double arg5[5] = { himag, ralo, rahi, declo, dechi };
+double arg6[6] = { himag, ralo, rahi, declo, dechi, himag };
 
 sqlite3_stmt *pStmt = NULL;        // Pointer to repared statement
 sqlite3 *pDb = NULL;               // Pointer to connection to SQLite2 DB
@@ -56,9 +56,9 @@ pTYC2rtn ptr;                      // pointer to strucs in linked list
     return failRtn;
   }
   /* bind parameters; return on fail */
-  for (i=0; i<5; ++i) {
+  for (i=0; i<6; ++i) {
     --failRtn;
-    if (SQLITE_OK != sqlite3_bind_double( pStmt, i+1, arg5[i])) {
+    if (SQLITE_OK != sqlite3_bind_double( pStmt, i+1, arg6[i])) {
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
       return failRtn;
