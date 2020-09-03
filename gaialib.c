@@ -15,7 +15,7 @@ gaiaRDMselect(char* gaiaSQLfilename
              ,pTYC2rtn *pRtn
              ) {
 
-static double rpd = atan(1.0) / 45.0;
+double rpd = atan(1.0) / 45.0;
 
 double arg6[6] = { himag, ralo, rahi, declo, dechi, himag };
 
