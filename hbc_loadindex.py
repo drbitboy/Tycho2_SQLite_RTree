@@ -184,6 +184,10 @@ if __name__ == "__main__":
         self.HBCfile.close()
         raise StopIteration
 
+      def __next__(self):
+        """Make this work under Python 3"""
+        return self.next()
+
 
     ### Build insert command
 
