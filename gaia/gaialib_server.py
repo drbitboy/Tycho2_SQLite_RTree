@@ -10,7 +10,7 @@ do_debug = 'DEBUG' in os.environ
 
 
 ########################################################################
-def do_main(gaialightdb,gaiahostname,port=DEFAULT_PORT):
+def do_main(gaialightdb,gaiahostname='',port=DEFAULT_PORT):
   server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
   server_sock.bind((gaiahostname,port,))
   server_sock.listen(50)
