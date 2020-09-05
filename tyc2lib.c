@@ -38,11 +38,11 @@ char *countStmt = isCatalog ? catalogCountStmt : suppl1CountStmt;
 char *stmt = isCatalog ? catalogStmt : suppl1Stmt;
 
 sqlite3_stmt *pStmt = NULL;        // Pointer to repared statement
-sqlite3 *pDb = NULL;               // Pointer to connection to SQLite2 DB
+sqlite3 *pDb = NULL;               // Pointer to connection to SQLite3 DB
 
 int rtn, i, count, failRtn = 0;
 
-pTYC2rtn ptr;                      // pointer to strucs in linked list
+pTYC2rtn ptr;                      // pointer to structs in linked list
 
   *pRtn = NULL;
 

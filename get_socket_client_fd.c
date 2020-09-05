@@ -97,6 +97,9 @@ int fail_return = 0;
 
 #ifdef TEST_MAIN
 /***********************************************************************
+ * ./tst gaia:<hostname>[/<port>]
+ * gcc -DTEST_MAIN -g -O0 tst.c -o tst
+ * 
  * Sample Usage
  */
 int
