@@ -23,11 +23,12 @@ int searcher() {
 int i = 0;
 pTYC2rtn pRtn = NULL;
 int count;
+char* gaia_envvar = getenv("GAIA_PATH"); // gaia.sqlite3 or gaia:<hostname>[/<port#>]
 
   /* Call gaiaRDMselect:  Gaia DR2 Ra/Dec/Magnitude sql SELECT
    * - available via gaialib.c
    */
-  count = gaiaRDMselect( "gaia_subset.sqlite3"
+  count = gaiaRDMselect( gaia_envvar ? gaia_envvar : "gaia_subset.sqlite3"
                        , himag, lora, hira, lodec, hidec
                        , &pRtn
                        );

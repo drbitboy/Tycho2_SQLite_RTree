@@ -3,7 +3,7 @@ bin_PROGRAMS = tyc2_test hbc_test gaia_test
 
 tyc2_test_SOURCES = tyc2_test.c tyc2lib.c tyc2lib.h localmalloc.h
 hbc_test_SOURCES = hbc_test.c hbclib.c hbclib.h localmalloc.h
-gaia_test_SOURCES = gaia_test.c gaialib.c gaialib.h localmalloc.h
+gaia_test_SOURCES = gaia_test.c gaialib.c gaialib.h get_client_socket_fd.c get_client_socket_fd.h localmalloc.h
 
 dist_doc_DATA = harvardbincat.py httpgunzip.py tyc2_loadindex_hogan.py hbc_loadindex.py sqlite3ghost.py tyc2_loadindex.py
 

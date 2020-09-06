@@ -1,17 +1,10 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
+#include "get_client_socket_fd.h"
 
-#ifndef DEFAULT_PORT_STRING
-#define DEFAULT_PORT_STRING "29073"
-#endif
-
+/***********************************************************************
+ * Connect to "server/port#" and return socket file descriptor (fd)
+ */
 int
-get_client_socket_fd(char *argv1)
+get_client_socket_fd(char* argv1, char* service_prefix)
 {
 struct addrinfo hints;
 struct addrinfo* result = (struct addrinfo*) NULL;
@@ -19,7 +12,7 @@ struct addrinfo* rp = (struct addrinfo*) NULL;
 int sock_fd = -1024;
 int status;
 
-char s_gaia[5];
+char s_port_string[256];
 char s_colon[2];
 char s_hostname[1024];
 char s_slash[2];
@@ -30,8 +23,8 @@ int i_sscanf;
 int fail_return = 0;
 
   i_sscanf = sscanf(argv1
-                   ,"%4[gai]%1[:]%1023[^/]%1[/]%5[0-9]%1s"
-                   ,s_gaia
+                   ,"%255[^:]%1[:]%1023[^/]%1[/]%5[0-9]%1s"
+                   ,s_port_string
                    ,s_colon
                    ,s_hostname
                    ,s_slash
@@ -40,11 +33,13 @@ int fail_return = 0;
                    );
 
   --fail_return;
-  if ( 0!=strcmp(s_gaia,"gaia")
+  if ( 0!=strcmp(s_port_string,service_prefix)
     || (i_sscanf!=3 && i_sscanf!=5)
      ) {
-    fprintf(stderr, "invalid gaia:... specification, argv[1] = '%s'\n"
-                  , argv1);
+    fprintf(stderr, "invalid %s:... specification, argv[1] = '%s'\n"
+                  , service_prefix
+                  , argv1
+                  );
     return fail_return;
   }
 
@@ -113,7 +108,7 @@ int server_sock_fd;
            );
     return (EXIT_FAILURE);
   }
-  server_sock_fd = get_client_socket_fd(argv[1]);
+  server_sock_fd = get_client_socket_fd(argv[1],"gaia");
   return server_sock_fd < -1024 ? server_sock_fd : (EXIT_SUCCESS);
 }
 #endif

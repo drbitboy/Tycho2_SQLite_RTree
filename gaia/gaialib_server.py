@@ -53,7 +53,7 @@ WHERE gaiartree.lomag<:himag
   AND gaiartree.ralo<:rahi
   AND gaiartree.dechi>:declo
   AND gaiartree.declo<:dechi
-  AND gaialight.phot_g_mean_mag<?
+  AND gaialight.phot_g_mean_mag<:himag
 ORDER BY gaialight.phot_g_mean_mag ASC
 ;"""
 
@@ -66,15 +66,18 @@ ORDER BY gaialight.phot_g_mean_mag ASC
 
   try:
     byteorder = '<'
-    (m1,himag,ralo,rahi,declo,dechi,) = struct.unpack(byteorder + '6d',received)
+    (m1,himag,ralo,rahi,declo,dechi,) = inputs = struct.unpack(byteorder + '6d',received)
     assert -1.0 == m1
   except:
     byteorder = '>'
-    (m1,himag,ralo,rahi,declo,dechi,) = struct.unpack(byteorder + '6d',received)
+    (m1,himag,ralo,rahi,declo,dechi,) = inputs = struct.unpack(byteorder + '6d',received)
     assert -1.0 == m1
 
-  cn = sqlite3.connect(sqlitedb)
+  if do_debug: sys.stderr.write('Inputs:  {0}\n'.format(inputs))
+
+  cn = sqlite3.connect(gaialightdb)
   cu = cn.cursor()
   cu.execute(query,dict(himag=himag,ralo=ralo,rahi=rahi,declo=declo,dechi=dechi))
   for row in cu:
+    if do_debug: sys.stderr.write('Output row:  {0}\n'.format(list(row)))
     client_sock.send(struct.pack(byteorder+'I3d',*list(row)))
