@@ -2,18 +2,30 @@ import os
 import sys
 import struct
 import socket
+import signal
 import sqlite3
 import traceback as tb
 
-DEFAULT_PORT = int(''.join(['{0:01x}'.format(15&ord(c)) for c in 'gaia']),16)
 do_debug = 'DEBUG' in os.environ
+do_extra_debug = 'EXTRA_DEBUG' in os.environ
+DEFAULT_PORT = int(''.join(['{0:01x}'.format(15&ord(c)) for c in 'gaia']),16)
 
+def handleSIGCHLD(*args):
+  while True:
+    try:
+      pid,status = os.waitpid(-1,os.WNOHANG)
+      if 0==pid and 0==status: raise ChildProcessError
+      if do_debug:
+        sys.stderr.write("Child [{0}] exited with status [{1}]\n".format(pid,status))
+    except ChildProcessError as e:
+      return
 
 ########################################################################
 def do_main(gaialightdb,gaiahostname='',port=DEFAULT_PORT):
   server_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
   server_sock.bind((gaiahostname,port,))
   server_sock.listen(50)
+  signal.signal(signal.SIGCHLD, handleSIGCHLD)
   try:
     while True:
       ### Create (accept) client socket
@@ -25,15 +37,16 @@ def do_main(gaialightdb,gaiahostname='',port=DEFAULT_PORT):
         try:
           get_gaia_data(gaialightdb,client_sock,client_addr_info)
         except:
-          if do_debug: tb.print_exc()
+          if do_extra_debug: tb.print_exc()
         exit(0)
       ### Parent closes its copy of the client socket & continues
       client_sock.close()
+      if do_debug: sys.stderr.write("Child {0} forked\n".format(pid))
   except SystemExit as e: pass
   except:
-    if do_debug: tb.print_exc()
+    if do_extra_debug: tb.print_exc()
     try:
-      sys.stderr.write('GaiaLib server closing\n')
+      if do_debug: sys.stderr.write('GaiaLib server closing\n')
       server.close()
     except:pass
 
