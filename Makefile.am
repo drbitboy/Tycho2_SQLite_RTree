@@ -37,7 +37,7 @@ pyhbctest.out: bsc5.sqlite3
 	python hbc_loadindex.py test > $@
 
 bsc5.sqlite3: BSC5
-	python hbc_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
+	python hbc_loadindex.py reload --sqlite3db=$@
 
 BSC5:
 	[ -f "../../fps-star-catalog/$@.gz" ] \
@@ -60,7 +60,7 @@ pytest.out: tyc2.sqlite3
 	python tyc2_loadindex.py test > $@
 
 tyc2.sqlite3: index.dat suppl_1.dat catalog.dat
-	python tyc2_loadindex.py reload | ( python -c 'import sqlite3' 2>/dev/null && cat || sqlite3 $@ )
+	python tyc2_loadindex.py reload --sqlite3db=$@
 
 catalog.dat:
 	[ -f "../../fps-star-catalog/$@.gz" ] \

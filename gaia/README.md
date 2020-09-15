@@ -40,23 +40,23 @@ will be something like this:
 
     ATTACH 'gaia_heavy.sqlite3' AS heavy;
 
-    SELECT light.gaiartree.ralo
-         , light.gaiartree.declo
+    SELECT light.gaialight.ra
+         , light.gaialight.dec
 
          , light.gaialight.phot_g_mean_mag
          , light.gaialight.phot_bp_mean_mag
          , light.gaialight.phot_rp_mean_mag
 
          , heavy.gaiaheavy.source_id
-         , heavy.gaiaheavy.offset
+         , heavy.gaiaheavy.idoffset
 
     FROM light.gaiartree
 
     INNER JOIN light.gaialight
-    ON light.gaiartree.offset=light.gaialight.offset
+    ON light.gaiartree.idoffset=light.gaialight.idoffset
 
     INNER JOIN heavy.gaiaheavy
-    ON light.gaiartree.offset=heavy.gaiaheavy.offset
+    ON light.gaiartree.idoffset=heavy.gaiaheavy.idoffset
 
     WHERE light.gaiartree.ralo>123.0
       AND light.gaiartree.rahi<124.0
@@ -71,9 +71,9 @@ will be something like this:
     LIMIT 10
     ;
 
-The data are split into two database files (DBs):  light and heavy.  All tables in both DBs contain the same number of rows, i.e. one per star.  All tables have a column called 'offset' that is a 32-bit INTeger and the PRIMARY KEYi for the table; it is intended to be used for JOINs.  The light table can be used on its own, and as the heavy data may not be needed for all applications, it was kept separate to save disk space for those applications.
+The data are split into two database files (DBs):  light and heavy.  All tables in both DBs contain the same number of rows, i.e. one per star.  All tables have a column called 'idoffset' that is a 32-bit INTeger and the PRIMARY KEYi for the table; it is intended to be used for JOINs.  The light table can be used on its own, and as the heavy data may not be needed for all applications, it was kept separate to save disk space for those applications.
 
-The light DB is gaia.sqlite3, and contains the R-Tree table for lookups and a light table for additional spatial and magnitude data (parallax, proper motion; magnitude details).  In the R-Tree table, the three data values, RA, Dec and Magnitude are each represented as a pair of low and high values.  In practice the low and high for RA values are the same, as they are for the Dec value.  The magnitudes pair, maglo and maghi, are the minimum and the maximum of the magnitude for each the three bands, G, BP, and RP, although for about 10% of the stars there are no BP or RP data and the single G magnitude is used for the both values of the magnitude pair.i
+The light DB is gaia.sqlite3, and contains the R-Tree table for lookups and a light table for additional spatial and magnitude data (parallax, RA, Dec, proper motion; magnitude details).  In the R-Tree table, the three data values, RA, Dec and Magnitude are each represented as a pair of low and high values in 32-bit single-precision floating-point format.  In practice the low and high for RA values are the same in 64-bit double-precision, as they are for the Dec value, but they are rounded to the nearest single-precsion values in the table; the double-precision values for RA and Dec are stored in the light table.  The magnitudes pair, maglo and maghi, are the minimum and the maximum of the magnitude for each the three bands, G, BP, and RP, although for about 10% of the stars there are no BP or RP data and the single G magnitude is used for the both values of the magnitude pair.i
 
 #### N.B. the R-Tree schema does not include the third dimension, range, implicit in the the three-dimensional nature of the Gaia dataset.
 
@@ -90,13 +90,15 @@ The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As
 
     sqlite> .schema
 
-    CREATE VIRTUAL TABLE gaiartree using rtree(offset,ralo,rahi,declo,dechi,lomag,himag)
-    /* gaiartree("offset",ralo,rahi,declo,dechi,lomag,himag) */;
+    CREATE VIRTUAL TABLE gaiartree using rtree(idoffset,ralo,rahi,declo,dechi,lomag,himag)
+    /* gaiartree("idoffset",ralo,rahi,declo,dechi,lomag,himag) */;
     CREATE TABLE IF NOT EXISTS "gaiartree_rowid"(rowid INTEGER PRIMARY KEY,nodeno);
     CREATE TABLE IF NOT EXISTS "gaiartree_node"(nodeno INTEGER PRIMARY KEY,data);
     CREATE TABLE IF NOT EXISTS "gaiartree_parent"(nodeno INTEGER PRIMARY KEY,parentnode);
     CREATE TABLE gaialight
-    (offset INT PRIMARY KEY
+    (idoffset INT PRIMARY KEY
+    ,ra REAL NOT NULL
+    ,dec REAL NOT NULL
     ,parallax REAL DEFAULT NULL
     ,pmra REAL DEFAULT NULL
     ,pmdec REAL DEFAULT NULL
@@ -110,7 +112,7 @@ The heavy DB is gaia_heavy.sqlite3, and contains error and correlation data.  As
     sqlite> .schema
 
     CREATE TABLE gaiaheavy
-    (offset INT PRIMARY KEY
+    (idoffset INT PRIMARY KEY
     ,source_id BIGINT NOT NULL
     ,ra_error REAL DEFAULT NULL
     ,dec_error REAL DEFAULT NULL

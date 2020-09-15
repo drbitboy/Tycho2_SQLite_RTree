@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     ### Open index.dat and read first line
     offset = 0
-    f = open(dikt['index'],'rb')
+    f = open(dikt['index'],'r')
     nexttoks = [i.strip() for i in f.readline().split('|')]
     rows = [int(i)-1 for i in nexttoks[:2]]
 
@@ -218,7 +218,8 @@ if __name__ == "__main__":
       def getSelectStatement(self): return self.sql
       def getOffset(self): return self.offset
 
-      def next(self):
+      def next(self): return self.__next__()
+      def __next__(self):
 
         ### Read one line from catalog file; offset is relative to first line
 
@@ -234,9 +235,9 @@ if __name__ == "__main__":
           ### Skip catalog.dat lines with X in Column 13
           ### - suppl_1.dat has H or T in Column 13
           if self.isCatalog and line[13]=='X':
-            radecCols = range(152,177,13)
+            radecCols = list(range(152,177,13))
           else:
-            radecCols = range(15,40,13)
+            radecCols = list(range(15,40,13))
 
           ### Parse RA,DEC, BMag, VMag fields
           ra,dec = [rpd*float(line[i:i+12]) for i in radecCols]
@@ -277,7 +278,7 @@ if __name__ == "__main__":
 
       ### Build insert command (table ID is ngtoks[0])
 
-      reciter = IterCat(open(dikt[ngtoks[0]],'rb'),ngtoks)
+      reciter = IterCat(open(dikt[ngtoks[0]],'r'),ngtoks)
 
       sql = reciter.getSelectStatement()
 

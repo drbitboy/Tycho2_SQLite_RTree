@@ -14,7 +14,9 @@ import re
 import os
 import sys
 import zlib
-import urllib2
+### urllib2.urlopen is available in Python 3 as urllib.request.urlopen
+try: import urllib2
+except: import urllib.request as urllib2
 
 
 ########################################################################
@@ -63,7 +65,16 @@ class httpgunzip:
     self.pathOut = pathOut
     self.urlPfx = urlPfx
     ### Get lines of FTP listing
-    self.lines = urllib2.urlopen(self.urlPfx).read().split('\n')
+    ### In Python 2, .read() will return a string that can be .split()
+    ### by a binary byte newline, but in Python 3 .read() will return
+    ### binary bytes that be split with a binary byte newline but not
+    ### with a string newline, so split the .read() data with a binary
+    ### byte newline
+    lines = urllib2.urlopen(self.urlPfx).read().split(b'\n')
+    ### Use .decode() to convert binary bytes to strings in Python 3 ...
+    try: self.lines = [line.decode('8859') for line in lines]
+    ### ... in Python 2 the variable lines is already a list of strings
+    except: self.lines = lines
 
   def go(self,testOnly=True):
     """
