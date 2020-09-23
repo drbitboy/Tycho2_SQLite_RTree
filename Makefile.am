@@ -15,12 +15,15 @@ testgaia: gaiatest.out cgaiatest.out
 	diff -s $^ || true
 	sum $^
 
-cgaiatest.out: gaia_test gaia_subset.sqlite3
+cgaiatest.out: gaia_test gaia_subset.sqlite3 gaia_subset_heavy.sqlite3
 	$(RM) $@
 	./gaia_test > $@
 
 gaia_subset.sqlite3:
-	wget -nv https://github.com/drbitboy/gaia_subset/raw/master/gaia_subset.sqlite3
+	wget -nv https://github.com/drbitboy/gaia_subset/raw/master/$@
+
+gaia_subset_heavy.sqlite3:
+	wget -nv https://github.com/drbitboy/gaia_subset/raw/master/$@
 
 testhbc: pyhbctest.out chbctest.out
 	md5sum $^ || md5 $^
