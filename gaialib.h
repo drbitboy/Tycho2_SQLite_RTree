@@ -1,47 +1,32 @@
 #ifndef __GAIALIB__
 #define __GAIALIB__
 #include <sqlite3.h>
+#include <stdbool.h>
 #include "tyc2lib.h"
 
-int gaiaRDMselect( char* gaiaSQLfilename, double himag
-                 , double lora, double hira
-                 , double lodec, double hidec
-                 , pTYC2rtn *pRtn);
-
-/* The following item ar not yet used ca. 2020-08-25 */
-
-typedef struct gaia_query_str {
-  double ralo;
-  double rahi;
-  double declo;
-  double dechi;
-  double lomag;
-  double himag;
-
-  int use_ralo;
-  int use_rahi;
-  int use_declo;
-  int use_dechi;
-  int use_lomag;
-  int use_himag;
-} GAIA_QUERY, *pGAIA_QUERY;
-
-typedef struct gaia_data_str {
-  sqlite_int64 idoffset;
+typedef struct GAIAlightrtnStruct {
   double ra;
   double dec;
-  double phot_g;
-  double phot_bp;
-  double phot_rp;
   double parallax;
   double pmra;
   double pmdec;
+  double phot_g_mean_mag;
+  double phot_bp_mean_mag;
+  double phot_rp_mean_mag;
 
-  double ra_corrected;
-  double dec_corrected;
-  double _uvstar[3];
+  bool parallax_is_null;
+  bool pmra_is_null;
+  bool pmdec_is_null;
+  bool phot_g_mean_mag_is_null;
+  bool phot_bp_mean_mag_is_null;
+  bool phot_rp_mean_mag_is_null;
 
+  struct GAIAlightrtnStruct* next;
+} GAIAlightrtn, *pGAIAlightrtn;
+
+typedef struct GAIAheavyrtnStruct {
   sqlite_int64 source_id;
+
   double ra_error;
   double dec_error;
   double parallax_error;
@@ -57,5 +42,37 @@ typedef struct gaia_data_str {
   double parallax_pmra_corr;
   double parallax_pmdec_corr;
   double pmra_pmdec_corr;
-} GAIA_DATA, *pGAIA_DATA;
+
+  bool source_id_is_null;
+  bool ra_error_is_null;
+  bool dec_error_is_null;
+  bool parallax_error_is_null;
+  bool pmra_error_is_null;
+  bool pmdec_error_is_null;
+  bool ra_dec_corr_is_null;
+  bool ra_parallax_corr_is_null;
+  bool ra_pmra_corr_is_null;
+  bool ra_pmdec_corr_is_null;
+  bool dec_parallax_corr_is_null;
+  bool dec_pmra_corr_is_null;
+  bool dec_pmdec_corr_is_null;
+  bool parallax_pmra_corr_is_null;
+  bool parallax_pmdec_corr_is_null;
+  bool pmra_pmdec_corr_is_null;
+
+  struct GAIAheavyrtnStruct* next;
+} GAIAheavyrtn, *pGAIAheavyrtn;
+
+#define gaiaRDMselect(gaiaSQLfilename, himag, lora, hira, lodec, hidec, pRtn) \
+       gaiaRDMselect3(gaiaSQLfilename, himag, lora, hira, lodec, hidec, pRtn, (pGAIAlightrtn*)0, (pGAIAheavyrtn*)0)
+
+int
+gaiaRDMselect3(char* gaiaSQLfilename
+              ,double himag
+              ,double ralo, double rahi
+              ,double declo, double dechi
+              ,pTYC2rtn *pTyc2
+              ,pGAIAlightrtn *pGAIAlight
+              ,pGAIAheavyrtn *pGAIAheavy
+              );
 #endif /* __GAIALIB__ */
