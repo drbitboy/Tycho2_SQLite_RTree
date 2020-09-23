@@ -17,31 +17,37 @@ static double hidec = 12.0;
  * gaiaRDMselect() library routine
  * 
  *   - returns count of stars found, and
- *   - sets pointer pRtn to malloc'ed linked list of structures
+ *   - sets pointer pTYC2Rtn to malloc'ed linked list of structures
  */
 int searcher() {
 int i = 0;
-pTYC2rtn pRtn = NULL;
+pTYC2rtn pTYC2Rtn = NULL;
+pGAIAlightrtn pGAIAlightRtn = NULL;
+pGAIAheavyrtn pGAIAheavyRtn = NULL;
 int count;
 char* gaia_envvar = getenv("GAIA_PATH"); // gaia.sqlite3 or gaia:<hostname>[/<port#>]
 
   /* Call gaiaRDMselect:  Gaia DR2 Ra/Dec/Magnitude sql SELECT
    * - available via gaialib.c
    */
-  count = gaiaRDMselect( gaia_envvar ? gaia_envvar : "gaia_subset.sqlite3"
-                       , himag, lora, hira, lodec, hidec
-                       , &pRtn
-                       );
+  count = gaiaRDMselect3( gaia_envvar ? gaia_envvar : "gaia_subset.sqlite3"
+                        , himag, lora, hira, lodec, hidec
+                        , &pTYC2Rtn
+                        , &pGAIAlightRtn
+                        , &pGAIAheavyRtn
+                        );
 
-  if (count > 0 && pRtn) {
+  if (count > 0 && pTYC2Rtn && pGAIAlightRtn && pGAIAheavyRtn) {
   pTYC2rtn ptr;
+  pGAIAlightrtn ptrlight = pGAIAlightRtn;
+  pGAIAheavyrtn ptrheavy = pGAIAheavyRtn;
 
     /* loop over linked list of structures;
-     * - pRtn is pointer to first in linked list
+     * - pTYC2Rtn is pointer to first in linked list
      * - member "->next" points to next structure
      * - ptr->next of last structure is NULL
      */
-    for (ptr=pRtn+(i=0); ptr; ++i, ptr=ptr->next) {
+    for (ptr=pTYC2Rtn+(i=0); ptr; ++i, ptr=ptr->next) {
 
       /* print out data, in structure pointed to by ptr, for one star */
       printf( "  %5d %10ld %6.3f %6.3f %6.3f %7.3f\n"
@@ -52,11 +58,17 @@ char* gaia_envvar = getenv("GAIA_PATH"); // gaia.sqlite3 or gaia:<hostname>[/<po
             , ptr->_xyz[2]   // Z-component  "
             , ptr->mag      // Magnitude:  B or V or Hp (suppl1)
             );
+      ptrlight = ptrlight->next;
+      ptrheavy = ptrheavy->next;
+    }
+    if (ptrlight || ptrheavy) {
+      count = -999;
+      printf("FAIL (light or heavy) count = %d\n", count);
     }
   } else {
     printf("FAIL count = %d\n", count);
   }
-  if (pRtn) free(pRtn);                           // cleanup
+  if (pTYC2Rtn) free(pTYC2Rtn);                           // cleanup
   return count < 0 ? count : (i==count ? 0 : 1);  // return 0 for success
 }
 

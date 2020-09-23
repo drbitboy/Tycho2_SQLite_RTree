@@ -31,15 +31,15 @@ WHERE gaiartree.lomag<? AND gaiartree.rahi>? AND gaiartree.ralo<? AND gaiartree.
 
 static char gaiaSelectStmtHeavy[] = { "\
 SELECT gaiartree.idoffset, gaialight.ra, gaialight.dec, gaialight.phot_g_mean_mag \
-, gaiaheavy.source_id \
-, gaiaheavy.ra_error, gaiaheavy.dec_error, gaiaheavy.parallax_error, gaiaheavy.pmra_error, gaiaheavy.pmdec_error \
-, gaiaheavy.ra_dec_corr, gaiaheavy.ra_parallax_corr, gaiaheavy.ra_pmra_corr, gaiaheavy.ra_pmdec_corr \
-, gaiaheavy.dec_parallax_corr, gaiaheavy.dec_pmra_corr, gaiaheavy.dec_pmdec_corr \
-, gaiaheavy.parallax_pmra_corr, gaiaheavy.parallax_pmdec_corr \
-, gaiaheavy.pmra_pmdec_corr \
+, heavytbl.source_id \
+, heavytbl.ra_error, heavytbl.dec_error, heavytbl.parallax_error, heavytbl.pmra_error, heavytbl.pmdec_error \
+, heavytbl.ra_dec_corr, heavytbl.ra_parallax_corr, heavytbl.ra_pmra_corr, heavytbl.ra_pmdec_corr \
+, heavytbl.dec_parallax_corr, heavytbl.dec_pmra_corr, heavytbl.dec_pmdec_corr \
+, heavytbl.parallax_pmra_corr, heavytbl.parallax_pmdec_corr \
+, heavytbl.pmra_pmdec_corr \
 FROM gaiartree \
 INNER JOIN gaialight ON gaiartree.idoffset=gaialight.idoffset \
-INNER JOIN gaiaheavy ON gaiartree.idoffset=gaiaheavy.idoffset \
+INNER JOIN heavydb.gaiaheavy heavytbl ON gaiartree.idoffset=heavytbl.idoffset \
 WHERE gaiartree.lomag<? AND gaiartree.rahi>? AND gaiartree.ralo<? AND gaiartree.dechi>?  AND gaiartree.declo<?  and gaialight.phot_g_mean_mag<? ORDER BY gaialight.phot_g_mean_mag ASC ;\
 " };
 
@@ -48,15 +48,15 @@ WHERE gaiartree.lomag<? AND gaiartree.rahi>? AND gaiartree.ralo<? AND gaiartree.
 static char gaiaSelectStmtBoth[] = { "\
 SELECT gaiartree.idoffset, gaialight.ra, gaialight.dec, gaialight.phot_g_mean_mag \
 , gaialight.parallax, gaialight.pmra, gaialight.pmdec, gaialight.phot_bp_mean_mag, gaialight.phot_rp_mean_mag \
-, gaiaheavy.source_id \
-, gaiaheavy.ra_error, gaiaheavy.dec_error, gaiaheavy.parallax_error, gaiaheavy.pmra_error, gaiaheavy.pmdec_error \
-, gaiaheavy.ra_dec_corr, gaiaheavy.ra_parallax_corr, gaiaheavy.ra_pmra_corr, gaiaheavy.ra_pmdec_corr \
-, gaiaheavy.dec_parallax_corr, gaiaheavy.dec_pmra_corr, gaiaheavy.dec_pmdec_corr \
-, gaiaheavy.parallax_pmra_corr, gaiaheavy.parallax_pmdec_corr \
-, gaiaheavy.pmra_pmdec_corr \
+, heavytbl.source_id \
+, heavytbl.ra_error, heavytbl.dec_error, heavytbl.parallax_error, heavytbl.pmra_error, heavytbl.pmdec_error \
+, heavytbl.ra_dec_corr, heavytbl.ra_parallax_corr, heavytbl.ra_pmra_corr, heavytbl.ra_pmdec_corr \
+, heavytbl.dec_parallax_corr, heavytbl.dec_pmra_corr, heavytbl.dec_pmdec_corr \
+, heavytbl.parallax_pmra_corr, heavytbl.parallax_pmdec_corr \
+, heavytbl.pmra_pmdec_corr \
 FROM gaiartree \
 INNER JOIN gaialight ON gaiartree.idoffset=gaialight.idoffset \
-INNER JOIN gaiaheavy ON gaiartree.idoffset=gaiaheavy.idoffset \
+INNER JOIN heavydb.gaiaheavy heavytbl ON gaiartree.idoffset=heavytbl.idoffset \
 WHERE gaiartree.lomag<? AND gaiartree.rahi>? AND gaiartree.ralo<? AND gaiartree.dechi>?  AND gaiartree.declo<?  and gaialight.phot_g_mean_mag<? ORDER BY gaialight.phot_g_mean_mag ASC ;\
 " };
 
@@ -73,14 +73,14 @@ gaiaRDMselect_sql(char* gaiaSQLfilename
                  ,double declo, double dechi
                  ,pTYC2rtn *pTyc2
                  ,pGAIAlightrtn *pGAIAlight
-                 ,pGAIAheavyrtn *pGAIAheavy
+                 ,ppGAIAheavyrtn ppGAIAheavy
                  ) {
 
 double rpd = atan(1.0) / 45.0;
 
 double arg6[6] = { himag, ralo, rahi, declo, dechi, himag };
 
-sqlite3_stmt *pStmt = NULL;        // Pointer to repared statement
+sqlite3_stmt *pStmt = NULL;        // Pointer to prepared statement
 sqlite3 *pDb = NULL;               // Pointer to connection to SQLite2 DB
 
 int i;
@@ -88,8 +88,8 @@ int count;
 int rtn = 0;
 int failRtn = 0;
 
-char* gaiaSelectStmt = pGAIAlight ? (pGAIAheavy ? gaiaSelectStmtBoth : gaiaSelectStmtLight)
-                                  : (pGAIAheavy ? gaiaSelectStmtHeavy : gaiaSelectStmtNeither)
+char* gaiaSelectStmt = pGAIAlight ? (ppGAIAheavy ? gaiaSelectStmtBoth : gaiaSelectStmtLight)
+                                  : (ppGAIAheavy ? gaiaSelectStmtHeavy : gaiaSelectStmtNeither)
                                   ;
 
 pTYC2rtn ptrBASE;                      // pointer to a struct in linked list
@@ -98,7 +98,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
   *pTyc2 = NULL;
   if (pGAIAlight) { *pGAIAlight = NULL; }
-  if (pGAIAheavy) { *pGAIAheavy = NULL; }
+  if (ppGAIAheavy) { *ppGAIAheavy = NULL; }
 
   /* open DB; return on fail */
   --failRtn;
@@ -107,8 +107,55 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     return failRtn;
   }
 
+  /* If heavy data needed, then attach heavy database
+   * - Heavy database filename replaces ".sqlite3" at end of light
+   *   filename (gaiaSQLfilename dummy argument) with "_heavy.sqlite3"
+   */
+  --failRtn;
+  if (ppGAIAheavy) {
+  char attach_fmt[] = { "ATTACH DATABASE '%s_heavy.sqlite3' AS heavydb ;" };
+  int len_fmt = strlen(attach_fmt);
+  char* attach_stmt;
+  int len_filename = strlen(gaiaSQLfilename);
+  char* heavy_prefix = (char*) 0;
+  sqlite3_stmt *pAttachStmt = NULL;        // Pointer to prepared statement
+    /* Gaia filename must end with ".sqlite3" in last 8 chars */
+    if (len_filename < 8) {
+      sqlite3_close(pDb);
+      return failRtn;
+    }
+    if (strcmp(".sqlite3",gaiaSQLfilename+len_filename-8)) {
+      sqlite3_close(pDb);
+      return failRtn;
+    }
+
+    if (!(attach_stmt=(char*)malloc((len_filename + len_fmt)* sizeof(char)))) {
+      sqlite3_close(pDb);
+      return failRtn;
+    }
+
+    /* Duplicate filename excluding ".sqlite3" (8 chars) on the end */
+    if (!(heavy_prefix=strndup(gaiaSQLfilename, len_filename-8))) {
+      free(attach_stmt);
+      sqlite3_close(pDb);
+      return failRtn;
+    }
+
+    sprintf(attach_stmt, attach_fmt, heavy_prefix);
+    free(heavy_prefix);
+
+    rtn = sqlite3_exec(pDb, attach_stmt, 0, 0, 0);
+    free(attach_stmt);
+
+    /* Check for failure */
+    if (SQLITE_OK!=rtn) {
+      sqlite3_close(pDb);
+      return failRtn;
+    }
+  } /* if (ppGAIAheavy) */
+
   /* Assume non-zero count; SQL-SELECT records & place in linked list */
-  /* prepare statement; return on fail */
+  /* - prepare statement; return on fail */
   --failRtn;
   if (SQLITE_OK != sqlite3_prepare_v2( pDb
                                      , gaiaSelectStmt
@@ -120,7 +167,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     sqlite3_close(pDb);
     return failRtn;
   }
-  /* bind parameters; return on fail */
+  /* - bind parameters; return on fail */
   for (i=0; i<6; ++i) {
     --failRtn;
     if (SQLITE_OK != sqlite3_bind_double( pStmt, i+1, arg6[i])) {
@@ -130,7 +177,8 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     }
   }
 
-  /* malloc arrays of size HARDLIMIT of return structures; return on fail */
+  /* - malloc arrays of size HARDLIMIT of return structures; return on fail */
+  /*   - Base values in TYC2rtn structure */
   --failRtn;
   *pTyc2 = (pTYC2rtn) malloc( HARDLIMIT * sizeof(TYC2rtn) );
   if (!*pTyc2) {
@@ -139,6 +187,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     return failRtn;
   }
 
+  /*   - Allocate GAIAlightrtn structures */
   --failRtn;
   if (pGAIAlight) {
     *pGAIAlight = (pGAIAlightrtn) malloc( HARDLIMIT * sizeof(GAIAlightrtn) );
@@ -152,10 +201,11 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     ptrGAIAlight = *pGAIAlight;
   }
 
+  /*   - Allocate GAIAheavyrtn structures */
   --failRtn;
-  if (pGAIAheavy) {
-    *pGAIAheavy = (pGAIAheavyrtn) malloc( HARDLIMIT * sizeof(GAIAheavyrtn) );
-    if (!*pGAIAheavy) {
+  if (ppGAIAheavy) {
+    *ppGAIAheavy = (pGAIAheavyrtn) malloc( HARDLIMIT * sizeof(GAIAheavyrtn) );
+    if (!*ppGAIAheavy) {
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
       if (pGAIAlight) { free((void*)*pGAIAlight); }
@@ -163,10 +213,10 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
       return failRtn;
     }
     /* Set loop pointer to beginning of list */
-    ptrGAIAheavy = *pGAIAheavy;
+    ptrGAIAheavy = *ppGAIAheavy;
   }
 
-  /* Loop over rows, save results */
+  /* - Loop over rows, save results */
   for (ptrBASE = *pTyc2+(count=0)
       ; count < HARDLIMIT && SQLITE_ROW == (rtn = sqlite3_step(pStmt))
       ; ++count, ptrBASE=ptrBASE->next
@@ -222,14 +272,14 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     }
 
     /* Retrieve GAIA heavy data, if requested */
-    /* , gaiaheavy.source_id \
-     * , gaiaheavy.ra_error, gaiaheavy.dec_error, gaiaheavy.parallax_error, gaiaheavy.pmra_error, gaiaheavy.pmdec_error \
-     * , gaiaheavy.ra_dec_corr, gaiaheavy.ra_parallax_corr, gaiaheavy.ra_pmra_corr, gaiaheavy.ra_pmdec_corr \
-     * , gaiaheavy.dec_parallax_corr, gaiaheavy.dec_pmra_corr, gaiaheavy.dec_pmdec_corr \
-     * , gaiaheavy.parallax_pmra_corr, gaiaheavy.parallax_pmdec_corr \
-     * , gaiaheavy.pmra_pmdec_corr \
+    /* , heavytbl.source_id \
+     * , heavytbl.ra_error, heavytbl.dec_error, heavytbl.parallax_error, heavytbl.pmra_error, heavytbl.pmdec_error \
+     * , heavytbl.ra_dec_corr, heavytbl.ra_parallax_corr, heavytbl.ra_pmra_corr, heavytbl.ra_pmdec_corr \
+     * , heavytbl.dec_parallax_corr, heavytbl.dec_pmra_corr, heavytbl.dec_pmdec_corr \
+     * , heavytbl.parallax_pmra_corr, heavytbl.parallax_pmdec_corr \
+     * , heavytbl.pmra_pmdec_corr \
      */
-    if (pGAIAheavy) {
+    if (ppGAIAheavy) {
 
       GETCOL(ptrGAIAheavy->source_id,sqlite3_column_int64);
       GETCOLDOUBLE(ptrGAIAheavy->ra_error);
@@ -267,7 +317,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
   if (count>0 && rtn == SQLITE_DONE) {
     (ptrBASE-1)->next = NULL;
     if (pGAIAlight) { (ptrGAIAlight-1)->next = NULL; }
-    if (pGAIAheavy) { (ptrGAIAheavy-1)->next = NULL; }
+    if (ppGAIAheavy) { (ptrGAIAheavy-1)->next = NULL; }
   }
 
   /* cleanup ... */
@@ -298,7 +348,7 @@ gaiaRDMselect_net(char* gaiaSQLfilename
                  ,double declo, double dechi
                  ,pTYC2rtn *pTyc2
                  ,pGAIAlightrtn *pGAIAlight
-                 ,pGAIAheavyrtn *pGAIAheavy
+                 ,ppGAIAheavyrtn ppGAIAheavy
                  ) {
 
 double rpd = atan(1.0) / 45.0;
@@ -428,7 +478,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
               ,double declo, double dechi
               ,pTYC2rtn *pTyc2
               ,pGAIAlightrtn *pGAIAlight
-              ,pGAIAheavyrtn *pGAIAheavy
+              ,ppGAIAheavyrtn ppGAIAheavy
               ) {
   if (!gaiaSQLfilename) { return 0; }
   if (strncmp(gaiaSQLfilename,"gaia:",5)) {
@@ -441,7 +491,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
                             ,declo, dechi
                             ,pTyc2
                             ,pGAIAlight
-                            ,pGAIAheavy
+                            ,ppGAIAheavy
                             );
   }
   /* Filename is in network client/server form, gaia:<host>[/<port>],
@@ -453,6 +503,6 @@ gaiaRDMselect3(char* gaiaSQLfilename
                           ,declo, dechi
                           ,pTyc2
                           ,pGAIAlight
-                          ,pGAIAheavy
+                          ,ppGAIAheavy
                           );
 }

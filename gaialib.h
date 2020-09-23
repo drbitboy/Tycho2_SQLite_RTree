@@ -22,7 +22,7 @@ typedef struct GAIAlightrtnStruct {
   bool phot_rp_mean_mag_is_null;
 
   struct GAIAlightrtnStruct* next;
-} GAIAlightrtn, *pGAIAlightrtn;
+} GAIAlightrtn, *pGAIAlightrtn, **ppGAIAlightrtn;
 
 typedef struct GAIAheavyrtnStruct {
   sqlite_int64 source_id;
@@ -61,10 +61,10 @@ typedef struct GAIAheavyrtnStruct {
   bool pmra_pmdec_corr_is_null;
 
   struct GAIAheavyrtnStruct* next;
-} GAIAheavyrtn, *pGAIAheavyrtn;
+} GAIAheavyrtn, *pGAIAheavyrtn, **ppGAIAheavyrtn;
 
 #define gaiaRDMselect(gaiaSQLfilename, himag, lora, hira, lodec, hidec, pRtn) \
-       gaiaRDMselect3(gaiaSQLfilename, himag, lora, hira, lodec, hidec, pRtn, (pGAIAlightrtn*)0, (pGAIAheavyrtn*)0)
+       gaiaRDMselect3(gaiaSQLfilename, himag, lora, hira, lodec, hidec, pRtn, (ppGAIAlightrtn)0, (ppGAIAheavyrtn)0)
 
 int
 gaiaRDMselect3(char* gaiaSQLfilename
@@ -72,7 +72,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
               ,double ralo, double rahi
               ,double declo, double dechi
               ,pTYC2rtn *pTyc2
-              ,pGAIAlightrtn *pGAIAlight
-              ,pGAIAheavyrtn *pGAIAheavy
+              ,ppGAIAlightrtn ppGAIAlight
+              ,ppGAIAheavyrtn ppGAIAheavy
               );
 #endif /* __GAIALIB__ */
