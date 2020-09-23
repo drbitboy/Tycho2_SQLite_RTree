@@ -71,7 +71,7 @@ gaiaRDMselect_sql(char* gaiaSQLfilename
                  ,double himag
                  ,double ralo, double rahi
                  ,double declo, double dechi
-                 ,pTYC2rtn *pTyc2
+                 ,ppTYC2rtn ppTyc2
                  ,pGAIAlightrtn *pGAIAlight
                  ,ppGAIAheavyrtn ppGAIAheavy
                  ) {
@@ -96,7 +96,7 @@ pTYC2rtn ptrBASE;                      // pointer to a struct in linked list
 pGAIAlightrtn ptrGAIAlight;            // pointer to a struct in linked list
 pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
-  *pTyc2 = NULL;
+  *ppTyc2 = NULL;
   if (pGAIAlight) { *pGAIAlight = NULL; }
   if (ppGAIAheavy) { *ppGAIAheavy = NULL; }
 
@@ -180,8 +180,8 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
   /* - malloc arrays of size HARDLIMIT of return structures; return on fail */
   /*   - Base values in TYC2rtn structure */
   --failRtn;
-  *pTyc2 = (pTYC2rtn) malloc( HARDLIMIT * sizeof(TYC2rtn) );
-  if (!*pTyc2) {
+  *ppTyc2 = (pTYC2rtn) malloc( HARDLIMIT * sizeof(TYC2rtn) );
+  if (!*ppTyc2) {
     sqlite3_finalize(pStmt);
     sqlite3_close(pDb);
     return failRtn;
@@ -194,7 +194,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     if (!*pGAIAlight) {
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
-      free((void*)*pTyc2);
+      free((void*)*ppTyc2);
       return failRtn;
     }
     /* Set loop pointer to beginning of list */
@@ -209,7 +209,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
       if (pGAIAlight) { free((void*)*pGAIAlight); }
-      free((void*)*pTyc2);
+      free((void*)*ppTyc2);
       return failRtn;
     }
     /* Set loop pointer to beginning of list */
@@ -217,7 +217,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
   }
 
   /* - Loop over rows, save results */
-  for (ptrBASE = *pTyc2+(count=0)
+  for (ptrBASE = *ppTyc2+(count=0)
       ; count < HARDLIMIT && SQLITE_ROW == (rtn = sqlite3_step(pStmt))
       ; ++count, ptrBASE=ptrBASE->next
       ) {
@@ -250,6 +250,9 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
 #   define GETCOL(PTR_MBR,COLFUNC) \
     PTR_MBR ## _is_null = (SQLITE_NULL==sqlite3_column_type(pStmt, icolumn)); \
+    GETCOLNOISNULL(PTR_MBR,COLFUNC)
+
+#   define GETCOLNOISNULL(PTR_MBR,COLFUNC) \
     PTR_MBR = COLFUNC(pStmt,icolumn++)
 
     /* Retrieve GAIA light data, if requested */
@@ -281,7 +284,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
      */
     if (ppGAIAheavy) {
 
-      GETCOL(ptrGAIAheavy->source_id,sqlite3_column_int64);
+      GETCOLNOISNULL(ptrGAIAheavy->source_id,sqlite3_column_int64);
       GETCOLDOUBLE(ptrGAIAheavy->ra_error);
       GETCOLDOUBLE(ptrGAIAheavy->dec_error);
       GETCOLDOUBLE(ptrGAIAheavy->parallax_error);
@@ -331,9 +334,8 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
   /* On failure (last step did not return SQLITE_ROW),
    * cleanup and return negative count
    */
-  free((void*) *pTyc2);
-  free((void*) *pTyc2);
-  *pTyc2 = NULL;
+  free((void*) *ppTyc2);
+  *ppTyc2 = NULL;
   return --failRtn;
 }
 
@@ -346,14 +348,16 @@ gaiaRDMselect_net(char* gaiaSQLfilename
                  ,double himag
                  ,double ralo, double rahi
                  ,double declo, double dechi
-                 ,pTYC2rtn *pTyc2
-                 ,pGAIAlightrtn *pGAIAlight
+                 ,ppTYC2rtn ppTyc2
+                 ,ppGAIAlightrtn ppGAIAlight
                  ,ppGAIAheavyrtn ppGAIAheavy
                  ) {
 
 double rpd = atan(1.0) / 45.0;
 
-double arg6[6] = { -1.0, himag, ralo, rahi, declo, dechi };
+double arg6[6] = { -1.0 
+                   - ((ppGAIAlight?2.0:0.0)+(ppGAIAheavy?4.0:0.0))
+                 , himag, ralo, rahi, declo, dechi };
 
 int sockfd;
 
@@ -368,8 +372,12 @@ enum { GAIA_DONE=0
      };
 
 pTYC2rtn ptr;                      // pointer to a struct in linked list
+pGAIAlightrtn ptrGAIAlight;        // pointer to a struct in linked list
+pGAIAheavyrtn ptrGAIAheavy;        // pointer to a struct in linked list
 
-  *pTyc2 = NULL;
+  *ppTyc2 = NULL;
+  if (ppGAIAlight) { *ppGAIAlight = NULL; }
+  if (ppGAIAheavy) { *ppGAIAheavy = NULL; }
 
   /* Create socket; return on fail */
   --failRtn;
@@ -384,25 +392,51 @@ pTYC2rtn ptr;                      // pointer to a struct in linked list
     return failRtn;
   }
 
-  /* malloc large array of return structures; return on fail */
+  /* Malloc large arrays of return structures; return on fail */
+  /* - TYC2 - base data */
   --failRtn;
-  *pTyc2 = (pTYC2rtn) malloc( HARDLIMIT * sizeof(TYC2rtn) );
-  if (!*pTyc2) {
+  *ppTyc2 = (pTYC2rtn) malloc( HARDLIMIT * sizeof(TYC2rtn) );
+  if (!*ppTyc2) {
     (void)close(sockfd);
     return failRtn;
   }
 
+  /* - GAIA light */
+  --failRtn;
+  if (ppGAIAlight) {
+    *ppGAIAlight = (pGAIAlightrtn) malloc( HARDLIMIT * sizeof(GAIAlightrtn) );
+    if (!*ppGAIAlight) {
+      free(*ppTyc2);
+      (void)close(sockfd);
+      return failRtn;
+    }
+    ptrGAIAlight = *ppGAIAlight;
+  }
+
+  /* - GAIA heavy */
+  --failRtn;
+  if (ppGAIAlight) {
+    *ppGAIAheavy = (pGAIAheavyrtn) malloc( HARDLIMIT * sizeof(GAIAheavyrtn) );
+    if (!*ppGAIAheavy) {
+      free(*ppGAIAlight);
+      free(*ppTyc2);
+      (void)close(sockfd);
+      return failRtn;
+    }
+    ptrGAIAheavy = *ppGAIAheavy;
+  }
+
   /* Loop over rows, save results */
   --failRtn;
-  for (ptr = *pTyc2+(count=0)
+  for (ptr = *ppTyc2+(count=0)
       ; count < HARDLIMIT
       ; ++count, ptr=ptr->next
       ) {
-  double p_doubles[4];
-  int* p_start_int = ((int*) p_doubles);
-  int* p_offset_int = p_start_int + 1;
-  void* p_void_start = (void*) p_offset_int;
-  void* p_void_stop = p_void_start + 28;
+  double p_doubles[50];
+  sqlite_int64* p_int64 = (sqlite_int64*) p_doubles;
+  int* p_offset_int = ((int*) p_doubles) + 1;
+  void* p_void_start;
+  void* p_void_stop;
   void* p_void_next;
   double rarad;
   double decrad;
@@ -411,6 +445,10 @@ pTYC2rtn ptr;                      // pointer to a struct in linked list
   double cosdec;
   double sindec;
   int L;
+
+    /* All cases:  4-byte integer offset; six doubles => 28 bytes */
+    p_void_start = (void*) p_offset_int;
+    p_void_stop = p_void_start + 28;
     p_void_next = p_void_start + (L=0);
     while (p_void_next < p_void_stop) {
       L = read(sockfd, p_void_next, (int)(p_void_stop - p_void_next));
@@ -426,6 +464,7 @@ pTYC2rtn ptr;                      // pointer to a struct in linked list
     ptr->ra     = p_doubles[1];
     ptr->dec    = p_doubles[2];
     ptr->mag    = p_doubles[3];
+    /* Convert RA,Dec to unit Cartesian vector */
     rarad = rpd * ptr->ra;
     decrad = rpd * ptr->dec;
     cosra = cos(rarad);
@@ -437,6 +476,96 @@ pTYC2rtn ptr;                      // pointer to a struct in linked list
     ptr->_xyz[2] = sindec;
     /* ->catalogORsuppl1 and ->catline:  not used */
     *ptr->catalogORsuppl1 = *ptr->catline = '\0';
+
+    if (ppGAIAlight) {
+    int lightbits;
+      /* GAIA light data are expected:  4-byte int; five doubles => 44 bytes */
+      p_void_start = (void*) p_offset_int;
+      p_void_stop = p_void_start + 44;
+      p_void_next = p_void_start + (L=0);
+      while (p_void_next < p_void_stop) {
+        L = read(sockfd, p_void_next, (int)(p_void_stop - p_void_next));
+        if (1>L) {
+          rtn = GAIA_ERROR;
+          break;
+        }
+        p_void_next += L;
+      }
+      if (1>L) break;
+
+      lightbits = *p_offset_int;
+
+      ptrGAIAlight->parallax_is_null         = (lightbits&1) ? true : false;
+      ptrGAIAlight->pmra_is_null             = (lightbits&2) ? true : false;
+      ptrGAIAlight->pmdec_is_null            = (lightbits&4) ? true : false;
+      ptrGAIAlight->phot_bp_mean_mag_is_null = (lightbits&8) ? true : false;
+      ptrGAIAlight->phot_rp_mean_mag_is_null = (lightbits&16) ? true : false;
+
+      ptrGAIAlight->parallax         = p_doubles[1];
+      ptrGAIAlight->pmra             = p_doubles[2];
+      ptrGAIAlight->pmdec            = p_doubles[3];
+      ptrGAIAlight->phot_g_mean_mag  = ptr->mag;
+      ptrGAIAlight->phot_bp_mean_mag = p_doubles[4];
+      ptrGAIAlight->phot_rp_mean_mag = p_doubles[5];
+
+      ++ptrGAIAlight;
+      (ptrGAIAlight-1)->next = ptrGAIAlight;
+    } /* if (ppGAIAlight) */
+
+    if (ppGAIAheavy) {
+    int heavybits;
+      /* GAIA heavy data are expected:  4-byte int; 8-byte int (source_id); 15 doubles => 132 bytes */
+      p_void_start = (void*) p_offset_int;
+      p_void_stop = p_void_start + 132;
+      p_void_next = p_void_start + (L=0);
+      while (p_void_next < p_void_stop) {
+        L = read(sockfd, p_void_next, (int)(p_void_stop - p_void_next));
+        if (1>L) {
+          rtn = GAIA_ERROR;
+          break;
+        }
+        p_void_next += L;
+      }
+      if (1>L) break;
+
+      heavybits = *p_offset_int;
+
+      ptrGAIAheavy->ra_error_is_null            = (heavybits&1) ? true : false;
+      ptrGAIAheavy->dec_error_is_null           = (heavybits&2) ? true : false;
+      ptrGAIAheavy->parallax_error_is_null      = (heavybits&4) ? true : false;
+      ptrGAIAheavy->pmra_error_is_null          = (heavybits&8) ? true : false;
+      ptrGAIAheavy->pmdec_error_is_null         = (heavybits&16) ? true : false;
+      ptrGAIAheavy->ra_dec_corr_is_null         = (heavybits&32) ? true : false;
+      ptrGAIAheavy->ra_parallax_corr_is_null    = (heavybits&64) ? true : false;
+      ptrGAIAheavy->ra_pmra_corr_is_null        = (heavybits&128) ? true : false;
+      ptrGAIAheavy->ra_pmdec_corr_is_null       = (heavybits&256) ? true : false;
+      ptrGAIAheavy->dec_parallax_corr_is_null   = (heavybits&512) ? true : false;
+      ptrGAIAheavy->dec_pmra_corr_is_null       = (heavybits&1024) ? true : false;
+      ptrGAIAheavy->dec_pmdec_corr_is_null      = (heavybits&2048) ? true : false;
+      ptrGAIAheavy->parallax_pmra_corr_is_null  = (heavybits&4096) ? true : false;
+      ptrGAIAheavy->parallax_pmdec_corr_is_null = (heavybits&8192) ? true : false;
+      ptrGAIAheavy->pmra_pmdec_corr_is_null     = (heavybits&16384) ? true : false;
+
+      ptrGAIAheavy->ra_error            = p_doubles[2];
+      ptrGAIAheavy->dec_error           = p_doubles[3];
+      ptrGAIAheavy->parallax_error      = p_doubles[4];
+      ptrGAIAheavy->pmra_error          = p_doubles[5];
+      ptrGAIAheavy->pmdec_error         = p_doubles[6];
+      ptrGAIAheavy->ra_dec_corr         = p_doubles[7];
+      ptrGAIAheavy->ra_parallax_corr    = p_doubles[8];
+      ptrGAIAheavy->ra_pmra_corr        = p_doubles[9];
+      ptrGAIAheavy->ra_pmdec_corr       = p_doubles[10];
+      ptrGAIAheavy->dec_parallax_corr   = p_doubles[11];
+      ptrGAIAheavy->dec_pmra_corr       = p_doubles[12];
+      ptrGAIAheavy->dec_pmdec_corr      = p_doubles[13];
+      ptrGAIAheavy->parallax_pmra_corr  = p_doubles[14];
+      ptrGAIAheavy->parallax_pmdec_corr = p_doubles[15];
+      ptrGAIAheavy->pmra_pmdec_corr     = p_doubles[16];
+
+      ++ptrGAIAheavy;
+      (ptrGAIAheavy-1)->next = ptrGAIAheavy;
+    } /* if (ppGAIAheavy) */
+
     ptr->next = ptr + 1;   // ->next pointer even though this is an array
   }
 
@@ -463,10 +592,12 @@ pTYC2rtn ptr;                      // pointer to a struct in linked list
   /* On failure (last step did not return GAIA_DONE),
    * cleanup and return negative count
    */
-  free((void*) *pTyc2);
-  *pTyc2 = NULL;
+  free((void*) *ppTyc2);
+  if (ppGAIAlight) { free((void*) *ppGAIAlight); }
+  if (ppGAIAheavy) { free((void*) *ppGAIAheavy); }
+  *ppTyc2 = NULL;
   return --failRtn;
-}
+} /* gaiaRDMselect_net(...) */
 
 /***********************************************************************
  *** Convenience wrappers for routines above                         ***
@@ -476,7 +607,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
               ,double himag
               ,double ralo, double rahi
               ,double declo, double dechi
-              ,pTYC2rtn *pTyc2
+              ,ppTYC2rtn ppTyc2
               ,pGAIAlightrtn *pGAIAlight
               ,ppGAIAheavyrtn ppGAIAheavy
               ) {
@@ -489,7 +620,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
                             ,himag
                             ,ralo, rahi
                             ,declo, dechi
-                            ,pTyc2
+                            ,ppTyc2
                             ,pGAIAlight
                             ,ppGAIAheavy
                             );
@@ -501,7 +632,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
                           ,himag
                           ,ralo, rahi
                           ,declo, dechi
-                          ,pTyc2
+                          ,ppTyc2
                           ,pGAIAlight
                           ,ppGAIAheavy
                           );

@@ -6,6 +6,7 @@
 
 typedef TYC2rtn STARrtn;
 typedef pTYC2rtn pSTARrtn;
+typedef ppTYC2rtn ppSTARrtn;
 
 /*
 typedef struct TYC2rtnStruct {
@@ -18,7 +19,7 @@ typedef struct TYC2rtnStruct {
   char catalogORsuppl1[10];
   char catline[250];
   struct TYC2rtnStruct *next;
-} TYC2rtn, *pTYC2rtn;
+} TYC2rtn, *pTYC2rtn, **ppTYC2rtn;
  */
 
 static char* hbcStmtFmt = { "SELECT starrtree.offset ,stardata.x ,stardata.y ,stardata.z ,starrtree.lomag FROM %srtree AS starrtree INNER JOIN %sdata AS stardata ON stardata.offset=starrtree.offset WHERE starrtree.himag>? AND starrtree.lomag<? AND starrtree.hira>? AND starrtree.lora<? AND starrtree.hidec>? AND starrtree.lodec<? ORDER BY starrtree.lomag ASC;" };
@@ -32,7 +33,7 @@ int hbcRDMselect( char* hbcSQLfilename
                  , double lomag, double himag
                  , double lora, double hira
                  , double lodec, double hidec
-                 , pSTARrtn *pRtn);
+                 , ppSTARrtn ppRtn);
 
 int hbc_getCatline( char* hbcSQLfilename, pSTARrtn starList);
 

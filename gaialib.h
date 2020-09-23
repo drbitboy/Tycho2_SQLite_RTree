@@ -17,7 +17,6 @@ typedef struct GAIAlightrtnStruct {
   bool parallax_is_null;
   bool pmra_is_null;
   bool pmdec_is_null;
-  bool phot_g_mean_mag_is_null;
   bool phot_bp_mean_mag_is_null;
   bool phot_rp_mean_mag_is_null;
 
@@ -43,7 +42,6 @@ typedef struct GAIAheavyrtnStruct {
   double parallax_pmdec_corr;
   double pmra_pmdec_corr;
 
-  bool source_id_is_null;
   bool ra_error_is_null;
   bool dec_error_is_null;
   bool parallax_error_is_null;
@@ -71,7 +69,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
               ,double himag
               ,double ralo, double rahi
               ,double declo, double dechi
-              ,pTYC2rtn *pTyc2
+              ,ppTYC2rtn ppTyc2
               ,ppGAIAlightrtn ppGAIAlight
               ,ppGAIAheavyrtn ppGAIAheavy
               );

@@ -16,7 +16,7 @@ typedef struct TYC2rtnStruct {
   char catalogORsuppl1[10];
   char catline[250];
   struct TYC2rtnStruct *next;
-} TYC2rtn, *pTYC2rtn;
+} TYC2rtn, *pTYC2rtn, **ppTYC2rtn;
 
 static char* catalogStmt = { "SELECT tyc2catalog_uvs.offset ,tyc2catalog_uvs.x ,tyc2catalog_uvs.y ,tyc2catalog_uvs.z ,tyc2catalog_uvs.mag FROM tyc2indexrtree INNER JOIN tyc2index ON tyc2indexrtree.offset=tyc2index.offset INNER JOIN tyc2catalog_uvs ON tyc2index.catalogstart<=tyc2catalog_uvs.offset AND tyc2index.catalogend>tyc2catalog_uvs.offset AND tyc2catalog_uvs.mag<? WHERE tyc2indexrtree.offset=tyc2index.offset AND tyc2indexrtree.hira>? AND tyc2indexrtree.lora<? AND tyc2indexrtree.hidec>? AND tyc2indexrtree.lodec<? ORDER BY tyc2catalog_uvs.mag asc;" };
 
