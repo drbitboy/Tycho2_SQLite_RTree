@@ -62,8 +62,8 @@ char* gaia_envvar = getenv("GAIA_PATH"); // gaia.sqlite3 or gaia:<hostname>[/<po
       ptrheavy = ptrheavy->next;
     }
     if (ptrlight || ptrheavy) {
-      count = -999;
       printf("FAIL (light or heavy) count = %d\n", count);
+      count = -999;
     }
   } else {
     printf("FAIL count = %d\n", count);

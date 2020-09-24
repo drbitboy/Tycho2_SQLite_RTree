@@ -159,7 +159,7 @@ SELECT gaiartree.idoffset
      , heavytbl.pmra_pmdec_corr
 
 FROM gaiartree
-INNER JOIN heavydb.gaiaheavy as heavytbl
+INNER JOIN heavydb.gaiaheavy heavytbl
 ON gaiartree.idoffset=heavytbl.idoffset
 
 WHERE gaiartree.lomag<:himag
@@ -191,7 +191,7 @@ SELECT gaiartree.idoffset
 FROM gaiartree
 INNER JOIN gaialight
 ON gaiartree.idoffset=gaialight.idoffset
-INNER JOIN heavydb.gaiaheavy as heavytbl
+INNER JOIN heavydb.gaiaheavy heavytbl
 
 ON gaiartree.idoffset=heavytbl.idoffset
 WHERE gaiartree.lomag<:himag
@@ -228,7 +228,11 @@ ORDER BY gaialight.phot_g_mean_mag ASC
     (negint,himag,ralo,rahi,declo,dechi,) = inputs = struct.unpack(byteorder + '6d',received)
     get_light, get_heavy, query = querydict[negint]
 
-  if do_debug: sys.stderr.write('Child Inputs:  {0}\n'.format(inputs))
+  if do_debug:
+    sys.stderr.write('Child Inputs:  {0}\n'.format(inputs))
+    if do_extra_debug:
+      sys.stderr.write('(get_light,get_heavy,)={0}\n'.format((get_light,get_heavy,)))
+      sys.stderr.write('### QUERY:\n{0}\n### END QUERY\n'.format(query))
 
   ### Set up database(s)
   cn = sqlite3.connect(gaialightdb)
@@ -237,8 +241,11 @@ ORDER BY gaialight.phot_g_mean_mag ASC
   if get_heavy:
     assert gaialightdb.endswith('.sqlite3')
     assert not ("'" in gaialightdb)
-    gaiaheavydb = '{0}_heavy.sqlite3'.format(gaialightdb[-8:])
-    cu.execute("""ATTACH DATABASE '{0}' as heavydb ;""".format(gaiaheavydb))
+    attach_query = """ATTACH DATABASE '{0}_heavy.sqlite3' as heavydb ;""".format(gaialightdb[:-8])
+    if do_debug and do_extra_debug:
+      sys.stderr.write('### QUERY:\n{0}\n### END QUERY\n'.format(attach_query))
+      sys.stderr.flush()
+    cu.execute(attach_query)
 
   ### Make the query
   cu.execute(query,dict(himag=himag,ralo=ralo,rahi=rahi,declo=declo,dechi=dechi))
@@ -247,19 +254,27 @@ ORDER BY gaialight.phot_g_mean_mag ASC
   for row in cu:
 
     lrow = list(row)
-    if do_data_debug:
+    if do_data_debug and do_extra_debug:
       sys.stderr.write('Child Output row:  {0}\n'.format(lrow))
       sys.stderr.flush()
 
     ### Base group:  idoffset; RA; Dec; Magnitude.
-    client_sock.send(struct.pack(byteorder+'I3d',*lrow))
-    last_col = 4
+    left_col = 0
+    right_col = 4
+    base_cols = lrow[left_col:right_col]
+    if do_data_debug:
+      sys.stderr.write('Child base_cols:  {0}\n'.format(base_cols))
+      sys.stderr.flush()
+    client_sock.send(struct.pack(byteorder+'I3d',*base_cols))
 
     if get_light:
       ### Light group:  parallax; proper motions; BP and RP magnitudes.
-      col0 = last_col
-      last_col += 5
-      light_cols = lrow[col0:last_col]
+      left_col = right_col
+      right_col += 5
+      light_cols = lrow[left_col:right_col]
+      if do_data_debug and do_extra_debug:
+        sys.stderr.write('Child light_cols:  {0}\n'.format(light_cols))
+        sys.stderr.flush()
       ### - Set "Is NULL" bits for any NULL values
       bit = 1
       bits = 0
@@ -272,9 +287,12 @@ ORDER BY gaialight.phot_g_mean_mag ASC
 
     if get_heavy:
       ### Heavy group:  source_id; errors; covariances
-      col0 = last_col
-      last_col += 16
-      heavy_cols = lrow[col0:last_col]
+      left_col = right_col
+      right_col += 16
+      heavy_cols = lrow[left_col:right_col]
+      if do_data_debug and do_extra_debug:
+        sys.stderr.write('Child heavy_cols:  {0}\n'.format(heavy_cols))
+        sys.stderr.flush()
       ### - Set "Is NULL" bits for any NULL values
       bit = 1
       bits = 0

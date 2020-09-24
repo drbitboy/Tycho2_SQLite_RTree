@@ -72,7 +72,7 @@ gaiaRDMselect_sql(char* gaiaSQLfilename
                  ,double ralo, double rahi
                  ,double declo, double dechi
                  ,ppTYC2rtn ppTyc2
-                 ,pGAIAlightrtn *pGAIAlight
+                 ,ppGAIAlightrtn ppGAIAlight
                  ,ppGAIAheavyrtn ppGAIAheavy
                  ) {
 
@@ -88,16 +88,16 @@ int count;
 int rtn = 0;
 int failRtn = 0;
 
-char* gaiaSelectStmt = pGAIAlight ? (ppGAIAheavy ? gaiaSelectStmtBoth : gaiaSelectStmtLight)
-                                  : (ppGAIAheavy ? gaiaSelectStmtHeavy : gaiaSelectStmtNeither)
-                                  ;
+char* gaiaSelectStmt = ppGAIAlight ? (ppGAIAheavy ? gaiaSelectStmtBoth : gaiaSelectStmtLight)
+                                   : (ppGAIAheavy ? gaiaSelectStmtHeavy : gaiaSelectStmtNeither)
+                                   ;
 
 pTYC2rtn ptrBASE;                      // pointer to a struct in linked list
 pGAIAlightrtn ptrGAIAlight;            // pointer to a struct in linked list
 pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
   *ppTyc2 = NULL;
-  if (pGAIAlight) { *pGAIAlight = NULL; }
+  if (ppGAIAlight) { *ppGAIAlight = NULL; }
   if (ppGAIAheavy) { *ppGAIAheavy = NULL; }
 
   /* open DB; return on fail */
@@ -189,16 +189,16 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
   /*   - Allocate GAIAlightrtn structures */
   --failRtn;
-  if (pGAIAlight) {
-    *pGAIAlight = (pGAIAlightrtn) malloc( HARDLIMIT * sizeof(GAIAlightrtn) );
-    if (!*pGAIAlight) {
+  if (ppGAIAlight) {
+    *ppGAIAlight = (pGAIAlightrtn) malloc( HARDLIMIT * sizeof(GAIAlightrtn) );
+    if (!*ppGAIAlight) {
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
       free((void*)*ppTyc2);
       return failRtn;
     }
     /* Set loop pointer to beginning of list */
-    ptrGAIAlight = *pGAIAlight;
+    ptrGAIAlight = *ppGAIAlight;
   }
 
   /*   - Allocate GAIAheavyrtn structures */
@@ -208,7 +208,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
     if (!*ppGAIAheavy) {
       sqlite3_finalize(pStmt);
       sqlite3_close(pDb);
-      if (pGAIAlight) { free((void*)*pGAIAlight); }
+      if (ppGAIAlight) { free((void*)*ppGAIAlight); }
       free((void*)*ppTyc2);
       return failRtn;
     }
@@ -257,7 +257,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
 
     /* Retrieve GAIA light data, if requested */
     /* , gaialight.parallax, gaialight.pmra, gaialight.pmdec, gaialight.phot_bp_mean_mag, gaialight.phot_rp_mean_mag */
-    if (pGAIAlight) {
+    if (ppGAIAlight) {
 
       /* Get items from ptrBASE */
       ptrGAIAlight->ra = ptrBASE->ra;
@@ -319,7 +319,7 @@ pGAIAheavyrtn ptrGAIAheavy;            // pointer to a struct in linked list
    */
   if (count>0 && rtn == SQLITE_DONE) {
     (ptrBASE-1)->next = NULL;
-    if (pGAIAlight) { (ptrGAIAlight-1)->next = NULL; }
+    if (ppGAIAlight) { (ptrGAIAlight-1)->next = NULL; }
     if (ppGAIAheavy) { (ptrGAIAheavy-1)->next = NULL; }
   }
 
@@ -580,6 +580,8 @@ pGAIAheavyrtn ptrGAIAheavy;        // pointer to a struct in linked list
    */
   if (count>0 && rtn == GAIA_DONE) {
     (ptr-1)->next = NULL;
+    if (ppGAIAlight) { (ptrGAIAlight-1)->next = NULL; }
+    if (ppGAIAheavy) { (ptrGAIAheavy-1)->next = NULL; }
   }
 
   /* cleanup ... */
@@ -608,7 +610,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
               ,double ralo, double rahi
               ,double declo, double dechi
               ,ppTYC2rtn ppTyc2
-              ,pGAIAlightrtn *pGAIAlight
+              ,ppGAIAlightrtn ppGAIAlight
               ,ppGAIAheavyrtn ppGAIAheavy
               ) {
   if (!gaiaSQLfilename) { return 0; }
@@ -621,7 +623,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
                             ,ralo, rahi
                             ,declo, dechi
                             ,ppTyc2
-                            ,pGAIAlight
+                            ,ppGAIAlight
                             ,ppGAIAheavy
                             );
   }
@@ -633,7 +635,7 @@ gaiaRDMselect3(char* gaiaSQLfilename
                           ,ralo, rahi
                           ,declo, dechi
                           ,ppTyc2
-                          ,pGAIAlight
+                          ,ppGAIAlight
                           ,ppGAIAheavy
                           );
 }
