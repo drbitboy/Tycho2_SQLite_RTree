@@ -10,9 +10,9 @@ function gaiaobj = gaianet(negval,himag,ralo,rahi,declo,dechi,host,port)
     if nargin > 5
       gaiaobj.inputs = [negval himag ralo rahi declo dechi];
       if nargin > 6
-        gaiaobj.host = varargin{1};
+        gaiaobj.host = host;
         if nargin > 7
-          gaiaobj.port = varargin{2};
+          gaiaobj.port = port;
         end
       end
     end
