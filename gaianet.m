@@ -2,7 +2,7 @@
  %%% Usage:
  %%%
  %%% Setup connection, make query
- %%% - Host:port is carci.ch:29073
+ %%% - Host:port is localhost:29073
  %%% - DEC search range is [10.0:12.0]
  %%% - RA search range is [46.0:48.0]
  %%% - Magnitude search is [-Infinity:19.0]
@@ -10,7 +10,7 @@
  %%%   will contain additional light and heavy data; valid values are
  %%%   -1.0 (neither), -3.0 (light), -5.0 (heavy), -7.0 (both)
  %%%
- %%% octave> go=gaianet(-7.0, 19.0, 46.0, 48.0, 10.0, 12.0, 'carci.ch', 29073);
+ %%% octave> go=gaianet(-7.0, 19.0, 46.0, 48.0, 10.0, 12.0, 'localhost', 29073);
  %%%
  %%% Get data, one star per call
  %%%
