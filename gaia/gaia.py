@@ -78,13 +78,16 @@ Actions:
 """
 import io
 import re
+try: re.Match
+except: re.Match = type(re.compile('^').match(''))
 import os
 import sys
 import glob
 import gzip
 import pickle
 import sqlite3
-import urllib3
+try   : import urllib3 ; use_urllib3 = True
+except: import urllib2_util ; use_urllib3 = False
 import traceback
 
 try:  assert isinstance(default_scols,list)
@@ -205,13 +208,19 @@ Static attributes:  csv_url_hostname; csv_url_dir; HTTPPOOL.
   def get_httppool(self):
     """Retrieve or create singleton GAIACSV.HTTPPOOL"""
 
-    try: assert isinstance(GAIACSV.HTTPPOOL,urllib3.HTTPConnectionPool)
-    except:
-      GAIACSV.HTTPPOOL = urllib3.HTTPConnectionPool(GAIACSV.csv_url_hostname
-                                                   ,maxsize=1
-                                                   ,timeout=urllib3.util.Timeout(10)
-                                                   )
-    return GAIACSV.HTTPPOOL
+    if use_urllib3:
+      try: assert isinstance(GAIACSV.HTTPPOOL,urllib3.HTTPConnectionPool)
+      except:
+        GAIACSV.HTTPPOOL = urllib3.HTTPConnectionPool(GAIACSV.csv_url_hostname
+                                                     ,maxsize=1
+                                                     ,timeout=urllib3.util.Timeout(10)
+                                                     )
+      return GAIACSV.HTTPPOOL
+
+    return urllib2_util.URLLIB2_WRAPPER(GAIACSV.csv_url_hostname
+                                       ,maxsize=1
+                                       ,timeout=10
+                                       )
 
   def __init__(self,hexmd5,csvgzpfx,maglimit):
     """Store MD5 checksum, filename prefix, magnitude limit; no data"""
@@ -227,7 +236,8 @@ Static attributes:  csv_url_hostname; csv_url_dir; HTTPPOOL.
     ### Build CSV GZ URL, retrieve last-modified time from HEAD data
     url = '{0}/{1}.csv.gz'.format(GAIACSV.csv_url_dir,self.csvgzpfx)
     csvhead = self.get_httppool().request('HEAD',url)
-    last_modified = csvhead.headers['Last-Modified']
+    try: last_modified = csvhead.headers['Last-Modified']
+    except: last_modified = csvhead.headers['last-modified']
     del csvhead
 
     if csv_progress:
@@ -246,7 +256,8 @@ Static attributes:  csv_url_hostname; csv_url_dir; HTTPPOOL.
       del csvreq
 
       ### Unzip & parse CSV data, delete byte stream, set .last_modified
-      with gzip.open(gzbytes,'rb') as funzipcsv:
+      ###with gzip.open(gzbytes,'rb') as funzipcsv:
+      with gzip.GzipFile(fileobj=gzbytes) as funzipcsv:
         (self.rows,self.column_names,self.filtered_rows
         ,) = gaia_read_csv(funzipcsv
                           ,scols=default_scols
@@ -350,6 +361,14 @@ Return:  (rows, selected column headers, number of rows filtered out,)
 
 
 ########################################################################
+def my_makedirs(subdir,exist_ok=False):
+  try:
+    try                  : os.makedirs(subdir,exist_ok=exist_ok)
+    except TypeError as e: os.makedirs(subdir)
+  except OSError as e: pass
+
+
+########################################################################
 def get_some_gaia(argv):
   """Read MD5SUM.txt to get MD% checksums and basenames of CSV GZ files,
 Select and get files, converting each CSV GZ into a .gaiapickle file
@@ -404,7 +423,7 @@ one or more hexadecimal characters prepended
       continue
 
   ### Create destination directory for pickle files
-  os.makedirs(gaia_pickle_dir,exist_ok=True)
+  my_makedirs(gaia_pickle_dir,exist_ok=True)
 
   ### Do not check for the existence of MD5SUM file here as there may be
   ### multiple forks of this code running simultaneously
@@ -882,7 +901,7 @@ Input argument is a list that defaults to sys.argv[1:]
   url = '{0}/MD5SUM.txt'.format(GAIACSV.csv_url_dir)
   gcsv = GAIACSV(None,None,None)
   md5req =  gcsv.get_httppool().request('GET',url)
-  os.makedirs(os.path.dirname(md5sum_path),exist_ok=True)
+  my_makedirs(os.path.dirname(md5sum_path),exist_ok=True)
   with open(md5sum_path,'wb') as fmd5sumtxt:
     fmd5sumtxt.write(md5req.data)
   md5req.close()
