@@ -82,6 +82,7 @@ try: re.Match
 except: re.Match = type(re.compile('^').match(''))
 import os
 import sys
+import time
 import glob
 import gzip
 import pickle
@@ -481,26 +482,37 @@ Method argument is typically sys.argv[1:]
 
   ### Start with full string of hex specifiers, and empty dict of PIDs
   hexmd5left = hexmd5all
-  pids = dict()
+  hex_by_pids = dict()
 
   ### Ensure MD5SUM file exists
   md5sum_get(argv=argv)
 
+  def fork_one_gaia(hextogetarg):
+    pid = os.fork()
+    if 0==pid:
+      ### The forked child process calls get_some_gaia and exits
+      get_some_gaia([hextogetarg]+argv)
+      exit(0)
+    return pid
+
+  ### Increasing delays, by hex specifier
+  restart_delays = dict()
+
   while hexmd5left:
+
     ### Select first nhex hex specifers, remove from string
     hextoget = hexmd5left[:nhex]
     hexmd5left = hexmd5left[nhex:]
 
-    pid = os.fork()
-    if 0==pid:
-      ### The forked child process calls get_some_gaia and exits
-      get_some_gaia([hextoget]+argv)
-      exit(0)
+    ### Fork one gaia child; only parent process returns from this call.
+    pid = fork_one_gaia(hextoget)
 
-    ### The parent process saves the PID of child in dict pids
-    pids[pid] = hextoget
+    ### The parent process saves the PID of child in dict hex_by_pids
+    hex_by_pids[pid] = hextoget
     sys.stderr.write('{0}\n'.format(dict(Started=pid,hextoget=hextoget)))
     sys.stderr.flush()
+
+    restart_delays[hextoget] = 0.0
 
     ### Determine whether a hex specifier, --select13=... or e.g. 89abc
     ### is in argv; if it is, then it will supersede every selection by
@@ -509,12 +521,24 @@ Method argument is typically sys.argv[1:]
     if [None for s in argv if s and [None for ss in s if s in hexmd5all]]:
       break
 
-  while len(pids):
+  while len(hex_by_pids):
     ### Wait for all forked children to complete
     fpid,fstatus = os.wait()
-    sys.stderr.write('{0}\n'.format(dict(Finished=fpid,hextoget=pids[fpid],status=fstatus)))
+    hextoget = hex_by_pids[fpid]
+    sys.stderr.write('{0}\n'.format(dict(Finished=fpid,hextoget=hextoget,status=fstatus)))
     sys.stderr.flush()
-    del pids[fpid]
+    del hex_by_pids[fpid]
+    ### If finished status is non-zero, handle the error completion by
+    ### restarting the process
+    if fstatus:
+      ### Increase delay by 100ms; delay by that increased amount;
+      ### fork another gaia child; save the child info
+      restart_delays[hextoget] += 0.1
+      time.sleep(restart_delays[hextoget])
+      pid = fork_one_gaia(hextoget)
+      hex_by_pids[pid] = hextoget
+      sys.stderr.write('{0}\n'.format(dict(Restarted=pid,hextoget=hextoget)))
+      sys.stderr.flush()
 
 
 class GAIAROW(object):
